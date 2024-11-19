@@ -133,4 +133,6 @@ REST_FRAMEWORK = {
 }
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [BASE_DIR / 'static']  # Direktori statis untuk development
+STATIC_ROOT = BASE_DIR / 'staticfiles'   # Direktori untuk collectstatic
+
