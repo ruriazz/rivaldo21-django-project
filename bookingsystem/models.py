@@ -81,6 +81,8 @@ class Booking(models.Model):
                     raise ValidationError("Room is required when resource_type is 'Room'.")
                 if not self.room.is_available(self.start_time, self.end_time):
                     raise ValidationError(f"{self.room.name} is already booked for the selected time.")
+                if not self.travel_description:
+                    raise ValidationError("Travel description is required for Room bookings.")
 
             # Validasi untuk resource_type 'Vehicle'
             elif self.resource_type == 'Vehicle':
