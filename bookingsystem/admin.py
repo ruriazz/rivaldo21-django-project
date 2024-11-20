@@ -2,11 +2,13 @@ from django.contrib import admin
 from .models import Room, Vehicle, Booking
 from django.core.exceptions import ValidationError
 
+
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
     list_display = ('name', 'capacity', 'status')
     list_filter = ('status',)
     search_fields = ('name',)
+
 
 @admin.register(Vehicle)
 class VehicleAdmin(admin.ModelAdmin):
@@ -14,14 +16,22 @@ class VehicleAdmin(admin.ModelAdmin):
     list_filter = ('type', 'status')
     search_fields = ('name',)
 
+
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
     list_display = ('resource_type', 'requester_name', 'start_time', 'end_time', 'status')
     list_editable = ('status',)  # Admin dapat mengedit status langsung dari list view
     list_filter = ('status', 'resource_type')  # Tambahkan filter
     search_fields = ('requester_name',)  # Kolom pencarian
-    exclude = ('room', 'vehicle')  # Kolom ini dikelola otomatis
 
+    # Tampilkan field yang relevan berdasarkan resource_type
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if obj and obj.resource_type == 'Room':
+            fields.remove('vehicle')  # Sembunyikan vehicle jika Room
+        elif obj and obj.resource_type == 'Vehicle':
+            fields.remove('room')  # Sembunyikan room jika Vehicle
+        return fields
 
     # Validasi custom di admin sebelum menyimpan data
     def save_model(self, request, obj, form, change):
