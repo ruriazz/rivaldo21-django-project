@@ -60,14 +60,17 @@ class Booking(models.Model):
     vehicle = models.ForeignKey(
         'Vehicle', on_delete=models.SET_NULL, null=True, blank=True
     )
+    destination_address = models.CharField(max_length=255, null=True)
+    travel_description = models.TextField(null=True)
     requester_name = models.CharField(max_length=100)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     status = models.CharField(
-        max_length=50,
-        choices=[('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')],
-        default='Pending'
+    max_length=50,
+    choices=[('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')],
+    default='Pending'
     )
+
 
     def clean(self):
         # Jalankan validasi hanya jika status adalah Pending
@@ -85,6 +88,20 @@ class Booking(models.Model):
                     raise ValidationError("Vehicle is required when resource_type is 'Vehicle'.")
                 if not self.vehicle.is_available(self.start_time, self.end_time):
                     raise ValidationError(f"{self.vehicle.name} is already booked for the selected time.")
+                if not self.destination_address:
+                    raise ValidationError("Destination address is required for Vehicle bookings.")
+                if not self.travel_description:
+                    raise ValidationError("Travel description is required for Vehicle bookings.")
 
         # Jika status bukan Pending, validasi tumpang tindih dilewati
         super().clean()
+
+    def is_pending(self):
+        return self.status == 'Pending'
+
+    def __str__(self):
+        if self.resource_type == 'Room' and self.room:
+            return f"Room Booking: {self.room.name} by {self.requester_name}"
+        elif self.resource_type == 'Vehicle' and self.vehicle:
+            return f"Vehicle Booking: {self.vehicle.name} by {self.requester_name}"
+        return f"{self.resource_type} Booking by {self.requester_name}"

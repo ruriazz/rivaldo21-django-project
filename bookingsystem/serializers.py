@@ -1,17 +1,21 @@
 from rest_framework import serializers
 from .models import Room, Vehicle, Booking
 
+# Serializer untuk Room
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
         fields = '__all__'
 
+# Serializer untuk Vehicle
 class VehicleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vehicle
         fields = '__all__'
 
+# Serializer untuk Booking
 class BookingSerializer(serializers.ModelSerializer):
+    # Menambahkan detail Room dan Vehicle
     room_details = RoomSerializer(source='room', read_only=True)
     vehicle_details = VehicleSerializer(source='vehicle', read_only=True)
 
@@ -20,7 +24,8 @@ class BookingSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'resource_type', 'room', 'vehicle', 
             'room_details', 'vehicle_details',
-            'requester_name', 'start_time', 'end_time', 'status'
+            'requester_name', 'start_time', 'end_time', 
+            'destination_address', 'travel_description', 'status'
         ]
         read_only_fields = ['status']  # User tidak bisa mengubah status langsung
 
@@ -30,6 +35,12 @@ class BookingSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("You must select a Room for this booking.")
         if data['resource_type'] == 'Vehicle' and not data.get('vehicle'):
             raise serializers.ValidationError("You must select a Vehicle for this booking.")
+        if data['resource_type'] == 'Vehicle' and (
+            not data.get('destination_address') or not data.get('travel_description')
+        ):
+            raise serializers.ValidationError(
+                "Destination address and travel description are required for Vehicle bookings."
+            )
 
         # Validasi booking tumpang tindih
         overlapping_bookings = Booking.objects.filter(
