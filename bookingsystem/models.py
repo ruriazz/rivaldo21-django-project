@@ -46,7 +46,11 @@ class Vehicle(models.Model):
         ('Under Maintenance', 'Under Maintenance'),
     ])
     driver = models.ForeignKey(
-        Driver, on_delete=models.SET_NULL, null=True, blank=True, related_name='vehicles'
+        Driver,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='vehicles'
     )
 
     def __str__(self):

@@ -143,5 +143,5 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 JAZZMIN_SETTINGS = {
-    'custom_js': 'js/booking_add_custom.js',
+    'custom_js': 'js/create_booking_custom.js',
 }

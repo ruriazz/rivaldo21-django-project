@@ -18,13 +18,14 @@ class BookingSerializer(serializers.ModelSerializer):
     # Menambahkan detail Room dan Vehicle
     room_details = RoomSerializer(source='room', read_only=True)
     vehicle_details = VehicleSerializer(source='vehicle', read_only=True)
+    destination_address = serializers.CharField(allow_blank=True, required=False)
 
     class Meta:
         model = Booking
         fields = [
-            'id', 'resource_type', 'room', 'vehicle', 
+            'id', 'resource_type', 'room', 'vehicle',
             'room_details', 'vehicle_details',
-            'requester_name', 'start_time', 'end_time', 
+            'requester_name', 'start_time', 'end_time',
             'destination_address', 'travel_description', 'status'
         ]
         read_only_fields = ['status']  # User tidak bisa mengubah status langsung
