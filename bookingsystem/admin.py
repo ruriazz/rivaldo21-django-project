@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Room, Vehicle, Booking
+from .models import Room, Vehicle, Booking, Driver
 from django.core.exceptions import ValidationError
 
 
@@ -14,8 +14,13 @@ class RoomAdmin(admin.ModelAdmin):
 class VehicleAdmin(admin.ModelAdmin):
     list_display = ('name', 'type', 'capacity', 'status')
     list_filter = ('type', 'status')
-    search_fields = ('name',)
+    search_fields = ('name', 'driver__name')  # Enable searching by driver
+    fields = ('name', 'type', 'capacity', 'status', 'driver')  # Tampilkan driver di form admin
 
+@admin.register(Driver)
+class DriverAdmin(admin.ModelAdmin):
+    list_display = ('name', 'license_number')
+    search_fields = ('name', 'license_number')
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):

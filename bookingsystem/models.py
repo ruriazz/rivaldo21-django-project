@@ -1,7 +1,17 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 
+class Driver(models.Model):
+    """Represents a driver responsible for a vehicle."""
+    name = models.CharField(max_length=100)
+    license_number = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Room(models.Model):
+    """Represents a meeting room available for booking."""
     name = models.CharField(max_length=100)
     capacity = models.IntegerField()
     status = models.CharField(max_length=50, choices=[
@@ -22,7 +32,9 @@ class Room(models.Model):
             end_time__gt=start_time
         ).exists()
 
+
 class Vehicle(models.Model):
+    """Represents a vehicle available for booking."""
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=50, choices=[
         ('Sedan', 'Sedan'),
@@ -36,9 +48,16 @@ class Vehicle(models.Model):
         ('In Use', 'In Use'),
         ('Under Maintenance', 'Under Maintenance'),
     ])
+    driver = models.ForeignKey(
+        Driver, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='vehicles'
+    )
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.driver.name if self.driver else 'No Driver'})"
 
     def is_available(self, start_time, end_time):
         # Periksa jika Vehicle ini sudah dipesan pada rentang waktu tertentu
@@ -49,7 +68,9 @@ class Vehicle(models.Model):
             end_time__gt=start_time
         ).exists()
 
+
 class Booking(models.Model):
+    """Represents a booking for a room or vehicle."""
     resource_type = models.CharField(
         max_length=50,
         choices=[('Room', 'Room'), ('Vehicle', 'Vehicle')]
@@ -60,20 +81,18 @@ class Booking(models.Model):
     vehicle = models.ForeignKey(
         'Vehicle', on_delete=models.SET_NULL, null=True, blank=True
     )
-    destination_address = models.CharField(max_length=255, null=True)
-    travel_description = models.TextField(null=True)
+    destination_address = models.CharField(max_length=255, null=True, blank=True)
+    travel_description = models.TextField(null=True, blank=True)
     requester_name = models.CharField(max_length=100)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     status = models.CharField(
-    max_length=50,
-    choices=[('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')],
-    default='Pending'
+        max_length=50,
+        choices=[('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')],
+        default='Pending'
     )
 
-
     def clean(self):
-        # Jalankan validasi hanya jika status adalah Pending
         if self.status == 'Pending':
             # Validasi untuk resource_type 'Room'
             if self.resource_type == 'Room':
@@ -97,9 +116,6 @@ class Booking(models.Model):
 
         # Jika status bukan Pending, validasi tumpang tindih dilewati
         super().clean()
-
-    def is_pending(self):
-        return self.status == 'Pending'
 
     def __str__(self):
         if self.resource_type == 'Room' and self.room:
