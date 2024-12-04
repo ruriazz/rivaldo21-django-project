@@ -1,47 +1,60 @@
 from rest_framework import serializers
 from .models import Room, Vehicle, Booking, Departement
 
-# Serializer untuk Room
+
+
 class RoomSerializer(serializers.ModelSerializer):
+    in_use = serializers.SerializerMethodField()
+
     class Meta:
         model = Room
         fields = '__all__'
 
-# Serializer untuk Vehicle
+    def get_in_use(self, obj):
+        request = self.context.get('request')
+        start_time = request.query_params.get('start_time')
+        end_time = request.query_params.get('end_time')
+        if start_time and end_time:
+            return obj.is_in_use(start_time, end_time)
+        return False
+
+
 class VehicleSerializer(serializers.ModelSerializer):
+    in_use = serializers.SerializerMethodField()
+
     class Meta:
         model = Vehicle
         fields = '__all__'
 
-# Serializer untuk Departement
+    def get_in_use(self, obj):
+        request = self.context.get('request')
+        start_time = request.query_params.get('start_time')
+        end_time = request.query_params.get('end_time')
+        if start_time and end_time:
+            return obj.is_in_use(start_time, end_time)
+        return False
+
+
 class DepartementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Departement
         fields = '__all__'
 
-# Serializer untuk Booking
+
 class BookingSerializer(serializers.ModelSerializer):
-    # Menambahkan detail Room, Vehicle, dan Departement
     room_details = RoomSerializer(source='room', read_only=True)
     vehicle_details = VehicleSerializer(source='vehicle', read_only=True)
     departement_details = DepartementSerializer(source='departement', read_only=True)
 
-    # Atur field yang wajib diisi
-    travel_description = serializers.CharField(required=True)
-    destination_address = serializers.CharField(required=True)
-    departement = serializers.PrimaryKeyRelatedField(
-        queryset=Departement.objects.all(), required=True
-    )
-
     class Meta:
         model = Booking
         fields = [
-            'id', 'resource_type', 'room', 'vehicle',
-            'room_details', 'vehicle_details', 'departement',
-            'departement_details', 'requester_name', 'start_time', 'end_time',
+            'id', 'resource_type', 'room', 'vehicle', 'departement',
+            'room_details', 'vehicle_details', 'departement_details',
+            'requester_name', 'start_time', 'end_time',
             'destination_address', 'travel_description', 'status'
         ]
-        read_only_fields = ['status']  # User tidak bisa mengubah status langsung
+        read_only_fields = ['status']
 
     def validate(self, data):
         # Validasi bahwa Room atau Vehicle dipilih sesuai dengan resource_type

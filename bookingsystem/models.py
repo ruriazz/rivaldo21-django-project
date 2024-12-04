@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 
 
 class Departement(models.Model):
@@ -29,12 +30,14 @@ class Room(models.Model):
     def __str__(self):
         return self.name
 
-    def is_available(self, start_time, end_time):
-        return not Booking.objects.filter(
+    def is_in_use(self, start_time, end_time):
+        # Periksa jika Room sedang digunakan pada waktu tertentu
+        return Booking.objects.filter(
             resource_type='Room',
             room=self,
             start_time__lt=end_time,
-            end_time__gt=start_time
+            end_time__gt=start_time,
+            status='Approved'
         ).exists()
 
 
@@ -63,97 +66,14 @@ class Vehicle(models.Model):
     def __str__(self):
         return f"{self.name} ({self.driver.name if self.driver else 'No Driver'})"
 
-    def is_available(self, start_time, end_time):
-        return not Booking.objects.filter(
+    def is_in_use(self, start_time, end_time):
+        # Periksa jika Vehicle sedang digunakan pada waktu tertentu
+        return Booking.objects.filter(
             resource_type='Vehicle',
             vehicle=self,
             start_time__lt=end_time,
-            end_time__gt=start_time
-        ).exists()
-
-
-class Booking(models.Model):
-    RESOURCE_TYPE_CHOICES = [
-        ('Room', 'Room'),
-        ('Vehicle', 'Vehicle'),
-    ]
-    STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Approved', 'Approved'),
-        ('Rejected', 'Rejected'),
-    ]
-
-    from django.db import models
-from django.core.exceptions import ValidationError
-
-
-class Departement(models.Model):
-    name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.name
-
-
-class Driver(models.Model):
-    name = models.CharField(max_length=100)
-    license_number = models.CharField(max_length=50, unique=True)
-
-    def __str__(self):
-        return self.name
-
-
-class Room(models.Model):
-    name = models.CharField(max_length=100)
-    capacity = models.IntegerField()
-    status = models.CharField(max_length=50, choices=[
-        ('Available', 'Available'),
-        ('In Use', 'In Use'),
-        ('Under Maintenance', 'Under Maintenance'),
-    ])
-
-    def __str__(self):
-        return self.name
-
-    def is_available(self, start_time, end_time):
-        return not Booking.objects.filter(
-            resource_type='Room',
-            room=self,
-            start_time__lt=end_time,
-            end_time__gt=start_time
-        ).exists()
-
-
-class Vehicle(models.Model):
-    name = models.CharField(max_length=100)
-    type = models.CharField(max_length=50, choices=[
-        ('Sedan', 'Sedan'),
-        ('SUV', 'SUV'),
-        ('Van', 'Van'),
-        ('Truck', 'Truck'),
-    ])
-    capacity = models.IntegerField()
-    status = models.CharField(max_length=50, choices=[
-        ('Available', 'Available'),
-        ('In Use', 'In Use'),
-        ('Under Maintenance', 'Under Maintenance'),
-    ])
-    driver = models.ForeignKey(
-        Driver,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='vehicles'
-    )
-
-    def __str__(self):
-        return f"{self.name} ({self.driver.name if self.driver else 'No Driver'})"
-
-    def is_available(self, start_time, end_time):
-        return not Booking.objects.filter(
-            resource_type='Vehicle',
-            vehicle=self,
-            start_time__lt=end_time,
-            end_time__gt=start_time
+            end_time__gt=start_time,
+            status='Approved'
         ).exists()
 
 
@@ -178,7 +98,7 @@ class Booking(models.Model):
         blank=True,
         related_name='bookings'
     )
-    destination_address = models.CharField(max_length=255, null=True, blank=True)
+    destination_address = models.CharField(max_length=255, null=False, blank=False)  # Harus diisi
     travel_description = models.TextField(null=False, blank=False)  # Harus diisi
     requester_name = models.CharField(max_length=100)
     start_time = models.DateTimeField()
@@ -186,14 +106,14 @@ class Booking(models.Model):
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
 
     def clean(self):
-        if self.status == 'Pending':
-            if not self.travel_description:
-                raise ValidationError("Travel description is required.")
-            if self.resource_type == 'Room' and not self.room:
-                raise ValidationError("Room is required when resource_type is 'Room'.")
-            if self.resource_type == 'Vehicle' and not self.vehicle:
-                raise ValidationError("Vehicle is required when resource_type is 'Vehicle'.")
-        super().clean()
+        if self.start_time >= self.end_time:
+            raise ValidationError("Start time must be before end time.")
+
+        if self.resource_type == 'Room' and self.room.is_in_use(self.start_time, self.end_time):
+            raise ValidationError(f"Room {self.room.name} is already in use.")
+
+        if self.resource_type == 'Vehicle' and self.vehicle.is_in_use(self.start_time, self.end_time):
+            raise ValidationError(f"Vehicle {self.vehicle.name} is already in use.")
 
     def __str__(self):
         if self.resource_type == 'Room' and self.room:
