@@ -31,7 +31,6 @@ class Room(models.Model):
         return self.name
 
     def is_in_use(self, start_time, end_time):
-        # Periksa jika Room sedang digunakan pada waktu tertentu
         return Booking.objects.filter(
             resource_type='Room',
             room=self,
@@ -67,7 +66,6 @@ class Vehicle(models.Model):
         return f"{self.name} ({self.driver.name if self.driver else 'No Driver'})"
 
     def is_in_use(self, start_time, end_time):
-        # Periksa jika Vehicle sedang digunakan pada waktu tertentu
         return Booking.objects.filter(
             resource_type='Vehicle',
             vehicle=self,
@@ -98,8 +96,8 @@ class Booking(models.Model):
         blank=True,
         related_name='bookings'
     )
-    destination_address = models.CharField(max_length=255, null=False, blank=False)  # Harus diisi
-    travel_description = models.TextField(null=False, blank=False)  # Harus diisi
+    destination_address = models.CharField(max_length=255, null=False, blank=False)
+    travel_description = models.TextField(null=False, blank=False)
     requester_name = models.CharField(max_length=100)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
@@ -114,14 +112,6 @@ class Booking(models.Model):
 
         if self.resource_type == 'Vehicle' and self.vehicle.is_in_use(self.start_time, self.end_time):
             raise ValidationError(f"Vehicle {self.vehicle.name} is already in use.")
-
-    def __str__(self):
-        if self.resource_type == 'Room' and self.room:
-            return f"Room Booking: {self.room.name} by {self.requester_name}"
-        elif self.resource_type == 'Vehicle' and self.vehicle:
-            return f"Vehicle Booking: {self.vehicle.name} by {self.requester_name}"
-        return f"{self.resource_type} Booking by {self.requester_name}"
-
 
     def __str__(self):
         if self.resource_type == 'Room' and self.room:

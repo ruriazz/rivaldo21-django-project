@@ -1,7 +1,8 @@
-from django.shortcuts import render  # Tambahkan ini
+from django.shortcuts import render  # Pastikan ini diimpor
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import viewsets
+from rest_framework import status
 from .models import Room, Vehicle, Booking, Departement
 from .serializers import RoomSerializer, VehicleSerializer, BookingSerializer, DepartementSerializer
 
@@ -21,13 +22,13 @@ class RoomViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Filter rooms that are not booked in the given time range
         available_rooms = Room.objects.exclude(
             booking__start_time__lt=end_time,
-            booking__end_time__gt=start_time
+            booking__end_time__gt=start_time,
+            booking__status='Approved'
         )
 
-        serializer = self.get_serializer(available_rooms, many=True)
+        serializer = self.get_serializer(available_rooms, many=True, context={'request': request})
         return Response(serializer.data)
 
 
@@ -39,15 +40,21 @@ class VehicleViewSet(viewsets.ModelViewSet):
     def available(self, request):
         start_time = request.query_params.get('start_time')
         end_time = request.query_params.get('end_time')
-        if start_time and end_time:
-            available_vehicles = Vehicle.objects.exclude(
-                booking__start_time__lt=end_time,  # Perbaikan di sini
-                booking__end_time__gt=start_time,  # Perbaikan di sini
-                booking__status='Approved'        # Perbaikan di sini
+
+        if not start_time or not end_time:
+            return Response(
+                {"error": "start_time and end_time are required parameters"},
+                status=status.HTTP_400_BAD_REQUEST
             )
-            serializer = self.get_serializer(available_vehicles, many=True, context={'request': request})
-            return Response(serializer.data)
-        return Response({"error": "Provide start_time and end_time"}, status=400)
+
+        available_vehicles = Vehicle.objects.exclude(
+            booking__start_time__lt=end_time,
+            booking__end_time__gt=start_time,
+            booking__status='Approved'
+        )
+
+        serializer = self.get_serializer(available_vehicles, many=True, context={'request': request})
+        return Response(serializer.data)
 
 
 class DepartementViewSet(viewsets.ModelViewSet):
@@ -71,5 +78,5 @@ def dashboard(request):
         'bookings': bookings,
         'departements': departements,  
     }
-    return render(request, 'dashboard.html', context)
+    return render(request, 'dashboard.html', context) 
 

@@ -2,7 +2,6 @@ from rest_framework import serializers
 from .models import Room, Vehicle, Booking, Departement
 
 
-
 class RoomSerializer(serializers.ModelSerializer):
     in_use = serializers.SerializerMethodField()
 
