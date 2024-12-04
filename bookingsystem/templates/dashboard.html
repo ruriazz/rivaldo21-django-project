@@ -6,74 +6,126 @@
     <title>Dashboard</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f9;
+            background-color: #f9f9f9;
             color: #333;
         }
+
+        /* Header */
         header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background-color: #861717;
+            background-color: #4CAF50;
             color: white;
             padding: 1rem 2rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
+
         header img {
             height: 50px;
         }
+
         header h1 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
         }
+
         header span {
             font-size: 1.2rem;
             font-weight: bold;
         }
+
+        /* Container */
         .container {
-            display: flex;
-            flex-direction: row;
+            display: grid;
+            grid-template-columns: 15% 85%;
+            min-height: 100vh;
         }
+
+        /* Sidebar */
         .sidebar {
-            width: 20%;
             background-color: #333;
             color: white;
-            padding: 1rem;
-            height: 100vh;
+            padding: 1.5rem;
         }
+
+        .sidebar h3 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
         .sidebar a {
             display: block;
             color: white;
             text-decoration: none;
             padding: 0.5rem 0;
+            margin-bottom: 0.5rem;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
         }
+
         .sidebar a:hover {
-            background-color: #e6b743;
+            background-color: #4CAF50;
         }
+
+        /* Main Content */
         .main-content {
-            width: 80%;
             padding: 2rem;
+            overflow-y: auto;
         }
+
         h1, h2 {
-            color: #e6b743;
+            color: #4CAF50;
+            margin-bottom: 1rem;
         }
+
+        /* Table */
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 2rem;
+            background-color: white;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
+
         table th, table td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px 15px;
             text-align: left;
+            border-bottom: 1px solid #ddd;
         }
+
         table th {
-            background-color: #3167b1;
+            background-color: #4CAF50;
             color: white;
+            font-size: 0.9rem;
         }
+
+        table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
         .no-data {
             color: #999;
+        }
+
+        /* Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                text-align: center;
+            }
+
+            .sidebar a {
+                margin-bottom: 0.8rem;
+            }
         }
     </style>
 </head>
@@ -93,29 +145,28 @@
         </div>
         <div class="main-content">
             <h2>Room Availability</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Room Name</th>
-            <th>Capacity</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for room in rooms %}
-            <tr>
-                <td>{{ room.name }}</td>
-                <td>{{ room.capacity }}</td>
-                <td>{{ room.status }}</td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="3" class="no-data">No rooms available.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
+            <table>
+                <thead>
+                    <tr>
+                        <th>Room Name</th>
+                        <th>Capacity</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for room in rooms %}
+                        <tr>
+                            <td>{{ room.name }}</td>
+                            <td>{{ room.capacity }}</td>
+                            <td>{{ room.status }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="no-data">No rooms available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
             <h2>Vehicles</h2>
             <table>
@@ -152,95 +203,44 @@
             </table>
 
             <h2>Room Bookings</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Room Name</th>
-            <th>Requester</th>
-            <th>Departement</th>
-            <th>Description</th>
-            <th>Start Time</th>
-            <th>End Time</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for booking in bookings %}
-            {% if booking.resource_type == "Room" %}
-                <tr>
-                    <td>{{ booking.room.name }}</td>
-                    <td>{{ booking.requester_name }}</td>
-                    <td>
-                        {% if booking.departement %}
-                            {{ booking.departement.name }}
-                        {% else %}
-                            No Departement
+            <table>
+                <thead>
+                    <tr>
+                        <th>Room Name</th>
+                        <th>Requester</th>
+                        <th>Departement</th>
+                        <th>Description</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                        {% if booking.resource_type == "Room" %}
+                            <tr>
+                                <td>{{ booking.room.name }}</td>
+                                <td>{{ booking.requester_name }}</td>
+                                <td>
+                                    {% if booking.departement %}
+                                        {{ booking.departement.name }}
+                                    {% else %}
+                                        No Departement
+                                    {% endif %}
+                                </td>
+                                <td>{{ booking.travel_description|default:"-" }}</td>
+                                <td>{{ booking.start_time|date:"Y-m-d H:i" }}</td>
+                                <td>{{ booking.end_time|date:"Y-m-d H:i" }}</td>
+                                <td>{{ booking.status }}</td>
+                            </tr>
                         {% endif %}
-                    </td>
-                    <td>{{ booking.travel_description|default:"-" }}</td>
-                    <td>{{ booking.start_time|date:"Y-m-d H:i" }}</td>
-                    <td>{{ booking.end_time|date:"Y-m-d H:i" }}</td>
-                    <td>{{ booking.status }}</td>
-                </tr>
-            {% endif %}
-        {% empty %}
-            <tr>
-                <td colspan="7" class="no-data">No room bookings available.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<h2>Vehicle Bookings</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Vehicle Name</th>
-            <th>Requester</th>
-            <th>Departement</th>
-            <th>Driver</th>
-            <th>Destination Address</th>
-            <th>Travel Description</th>
-            <th>Start Time</th>
-            <th>End Time</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for booking in bookings %}
-            {% if booking.resource_type == "Vehicle" %}
-                <tr>
-                    <td>{{ booking.vehicle.name }}</td>
-                    <td>{{ booking.requester_name }}</td>
-                    <td>
-                        {% if booking.departement %}
-                            {{ booking.departement.name }}
-                        {% else %}
-                            No Departement
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if booking.vehicle.driver %}
-                            {{ booking.vehicle.driver.name }}
-                        {% else %}
-                            No Driver
-                        {% endif %}
-                    </td>
-                    <td>{{ booking.destination_address|default:"-" }}</td>
-                    <td>{{ booking.travel_description|default:"-" }}</td>
-                    <td>{{ booking.start_time|date:"Y-m-d H:i" }}</td>
-                    <td>{{ booking.end_time|date:"Y-m-d H:i" }}</td>
-                    <td>{{ booking.status }}</td>
-                </tr>
-            {% endif %}
-        {% empty %}
-            <tr>
-                <td colspan="9" class="no-data">No vehicle bookings available.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="no-data">No room bookings available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </body>
