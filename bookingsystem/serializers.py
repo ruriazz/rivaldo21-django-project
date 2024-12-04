@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Room, Vehicle, Booking
+from .models import Room, Vehicle, Booking, Departement
 
 # Serializer untuk Room
 class RoomSerializer(serializers.ModelSerializer):
@@ -13,19 +13,32 @@ class VehicleSerializer(serializers.ModelSerializer):
         model = Vehicle
         fields = '__all__'
 
+# Serializer untuk Departement
+class DepartementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Departement
+        fields = '__all__'
+
 # Serializer untuk Booking
 class BookingSerializer(serializers.ModelSerializer):
-    # Menambahkan detail Room dan Vehicle
+    # Menambahkan detail Room, Vehicle, dan Departement
     room_details = RoomSerializer(source='room', read_only=True)
     vehicle_details = VehicleSerializer(source='vehicle', read_only=True)
-    destination_address = serializers.CharField(allow_blank=True, required=False)
+    departement_details = DepartementSerializer(source='departement', read_only=True)
+
+    # Atur field yang wajib diisi
+    travel_description = serializers.CharField(required=True)
+    destination_address = serializers.CharField(required=True)
+    departement = serializers.PrimaryKeyRelatedField(
+        queryset=Departement.objects.all(), required=True
+    )
 
     class Meta:
         model = Booking
         fields = [
             'id', 'resource_type', 'room', 'vehicle',
-            'room_details', 'vehicle_details',
-            'requester_name', 'start_time', 'end_time',
+            'room_details', 'vehicle_details', 'departement',
+            'departement_details', 'requester_name', 'start_time', 'end_time',
             'destination_address', 'travel_description', 'status'
         ]
         read_only_fields = ['status']  # User tidak bisa mengubah status langsung

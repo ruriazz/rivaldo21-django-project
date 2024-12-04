@@ -1,11 +1,18 @@
 from django.contrib import admin
 from django.urls import path, include
-from bookingsystem import views  # Impor fungsi dashboard dari views.py
+from rest_framework.routers import DefaultRouter
+from bookingsystem.views import RoomViewSet, VehicleViewSet, BookingViewSet, DepartementViewSet
+from bookingsystem import views
 
+# DefaultRouter untuk API
+router = DefaultRouter()
+router.register(r'rooms', RoomViewSet, basename='rooms')
+router.register(r'vehicles', VehicleViewSet, basename='vehicles')
+router.register(r'bookings', BookingViewSet, basename='bookings')
+router.register(r'departements', DepartementViewSet, basename='departements')
 
 urlpatterns = [
-    path('admin/', admin.site.urls),           # URL admin
-    path('api/', include('bookingsystem.urls')),  # URL API
-    path('', views.dashboard, name='dashboard'),  # Root URL diarahkan ke dashboard
-    path('dashboard/', views.dashboard, name='dashboard'),  # URL /dashboard diarahkan ke dashboard
+    path('admin/', admin.site.urls),
+    path('api/', include(router.urls)),  # Masukkan router API di sini
+    path('', views.dashboard, name='dashboard'),  # Dashboard
 ]

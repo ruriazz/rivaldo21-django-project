@@ -1,10 +1,13 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import RoomViewSet, VehicleViewSet, BookingViewSet
+from .views import RoomViewSet, VehicleViewSet, BookingViewSet, DepartementViewSet
 
 router = DefaultRouter()
-router.register(r'rooms', RoomViewSet, basename='room')
-router.register(r'vehicles', VehicleViewSet, basename='vehicle')
-router.register(r'bookings', BookingViewSet, basename='booking')
+router.register('rooms', RoomViewSet)
+router.register('vehicles', VehicleViewSet)
+router.register('bookings', BookingViewSet)
+router.register('departements', DepartementViewSet)
 
-urlpatterns = router.urls
+urlpatterns = [
+    path('api/', include(router.urls)),
+]

@@ -52,7 +52,6 @@ class BookingAdmin(admin.ModelAdmin):
         except ValidationError as e:
             form.add_error(None, e)
 
-    # Tambahkan daftar departemen ke konteks template
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         extra_context = extra_context or {}
         extra_context['departements'] = Departement.objects.all()
