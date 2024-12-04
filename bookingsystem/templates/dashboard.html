@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,8 +25,20 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
+        header .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
         header img {
             height: 50px;
+            margin-right: 10px;
+        }
+
+        header .logo-text {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: white;
         }
 
         header h1 {
@@ -131,7 +144,10 @@
 </head>
 <body>
     <header>
-        <img src="static/images/logo.png" alt="Logo">
+        <div class="logo-container">
+            <img src="{% static 'images/logo.png' %}" alt="Logo">
+            <span class="logo-text">TIC BOOKING SYSTEM</span>
+        </div>
         <h1>TIC BOOKING SYSTEM</h1>
         <span>Welcome to the Dashboard</span>
     </header>
