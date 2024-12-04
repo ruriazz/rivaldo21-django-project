@@ -28,3 +28,13 @@ document.addEventListener('DOMContentLoaded', function () {
         resourceTypeField.addEventListener('change', toggleFields);
     }
 });
+
+// dynamic_admin.js
+document.addEventListener('DOMContentLoaded', () => {
+    const departementSelect = document.getElementById('departement');
+    if (departementSelect) {
+        departementSelect.addEventListener('change', () => {
+            console.log('Selected Departement:', departementSelect.value);
+        });
+    }
+});

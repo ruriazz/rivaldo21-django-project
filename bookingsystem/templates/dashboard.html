@@ -16,7 +16,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background-color: #4CAF50;
+            background-color: #861717;
             color: white;
             padding: 1rem 2rem;
         }
@@ -49,14 +49,14 @@
             padding: 0.5rem 0;
         }
         .sidebar a:hover {
-            background-color: #4CAF50;
+            background-color: #e6b743;
         }
         .main-content {
             width: 80%;
             padding: 2rem;
         }
         h1, h2 {
-            color: #4CAF50;
+            color: #e6b743;
         }
         table {
             width: 100%;
@@ -69,7 +69,7 @@
             text-align: left;
         }
         table th {
-            background-color: #4CAF50;
+            background-color: #3167b1;
             color: white;
         }
         .no-data {
@@ -79,15 +79,11 @@
 </head>
 <body>
     <header>
-        <!-- Logo -->
         <img src="static/images/logo.png" alt="Logo">
-        <!-- Title -->
         <h1>TIC BOOKING SYSTEM</h1>
-        <!-- Optional right-aligned text -->
         <span>Welcome to the Dashboard</span>
     </header>
     <div class="container">
-        <!-- Sidebar -->
         <div class="sidebar">
             <h3>Menu</h3>
             <a href="#">Dashboard</a>
@@ -95,31 +91,31 @@
             <a href="#">Vehicles</a>
             <a href="#">Bookings</a>
         </div>
-        <!-- Main Content -->
         <div class="main-content">
-            <h2>Rooms</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Capacity</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for room in rooms %}
-                        <tr>
-                            <td>{{ room.name }}</td>
-                            <td>{{ room.capacity }}</td>
-                            <td>{{ room.status }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="3" class="no-data">No rooms available.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <h2>Room Availability</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Room Name</th>
+            <th>Capacity</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for room in rooms %}
+            <tr>
+                <td>{{ room.name }}</td>
+                <td>{{ room.capacity }}</td>
+                <td>{{ room.status }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="3" class="no-data">No rooms available.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
 
             <h2>Vehicles</h2>
             <table>
@@ -129,6 +125,7 @@
                         <th>Type</th>
                         <th>Capacity</th>
                         <th>Status</th>
+                        <th>Driver</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -138,42 +135,112 @@
                             <td>{{ vehicle.type }}</td>
                             <td>{{ vehicle.capacity }}</td>
                             <td>{{ vehicle.status }}</td>
+                            <td>
+                                {% if vehicle.driver %}
+                                    {{ vehicle.driver.name }}
+                                {% else %}
+                                    No Driver
+                                {% endif %}
+                            </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="4" class="no-data">No vehicles available.</td>
+                            <td colspan="5" class="no-data">No vehicles available.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
 
-            <h2>Bookings</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Requester</th>
-                        <th>Start Time</th>
-                        <th>End Time</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for booking in bookings %}
-                        <tr>
-                            <td>{{ booking.resource_type }}</td>
-                            <td>{{ booking.requester_name }}</td>
-                            <td>{{ booking.start_time }}</td>
-                            <td>{{ booking.end_time }}</td>
-                            <td>{{ booking.status }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="5" class="no-data">No bookings available.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <h2>Room Bookings</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Room Name</th>
+            <th>Requester</th>
+            <th>Departement</th>
+            <th>Description</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for booking in bookings %}
+            {% if booking.resource_type == "Room" %}
+                <tr>
+                    <td>{{ booking.room.name }}</td>
+                    <td>{{ booking.requester_name }}</td>
+                    <td>
+                        {% if booking.departement %}
+                            {{ booking.departement.name }}
+                        {% else %}
+                            No Departement
+                        {% endif %}
+                    </td>
+                    <td>{{ booking.travel_description|default:"-" }}</td>
+                    <td>{{ booking.start_time|date:"Y-m-d H:i" }}</td>
+                    <td>{{ booking.end_time|date:"Y-m-d H:i" }}</td>
+                    <td>{{ booking.status }}</td>
+                </tr>
+            {% endif %}
+        {% empty %}
+            <tr>
+                <td colspan="7" class="no-data">No room bookings available.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Vehicle Bookings</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Vehicle Name</th>
+            <th>Requester</th>
+            <th>Departement</th>
+            <th>Driver</th>
+            <th>Destination Address</th>
+            <th>Travel Description</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for booking in bookings %}
+            {% if booking.resource_type == "Vehicle" %}
+                <tr>
+                    <td>{{ booking.vehicle.name }}</td>
+                    <td>{{ booking.requester_name }}</td>
+                    <td>
+                        {% if booking.departement %}
+                            {{ booking.departement.name }}
+                        {% else %}
+                            No Departement
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if booking.vehicle.driver %}
+                            {{ booking.vehicle.driver.name }}
+                        {% else %}
+                            No Driver
+                        {% endif %}
+                    </td>
+                    <td>{{ booking.destination_address|default:"-" }}</td>
+                    <td>{{ booking.travel_description|default:"-" }}</td>
+                    <td>{{ booking.start_time|date:"Y-m-d H:i" }}</td>
+                    <td>{{ booking.end_time|date:"Y-m-d H:i" }}</td>
+                    <td>{{ booking.status }}</td>
+                </tr>
+            {% endif %}
+        {% empty %}
+            <tr>
+                <td colspan="9" class="no-data">No vehicle bookings available.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
         </div>
     </div>
 </body>

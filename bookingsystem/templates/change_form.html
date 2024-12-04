@@ -4,3 +4,18 @@
     {{ block.super }}
     <script src="{% static 'js/dynamic_admin.js' %}"></script>
 {% endblock %}
+
+{% block content %}
+    {{ block.super }}
+    <div>
+        <label for="departement">Departement</label>
+        <select id="departement" name="departement">
+            <option value="">Select a Departement</option>
+            {% for departement in departements %}
+                <option value="{{ departement.id }}" {% if departement.id == booking.departement_id %}selected{% endif %}>
+                    {{ departement.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+{% endblock %}

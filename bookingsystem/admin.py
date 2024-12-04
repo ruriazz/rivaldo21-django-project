@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Room, Vehicle, Booking, Driver
+from django.shortcuts import render
+from .models import Room, Vehicle, Booking, Driver, Departement
 from django.core.exceptions import ValidationError
 
 
@@ -8,6 +9,12 @@ class RoomAdmin(admin.ModelAdmin):
     list_display = ('name', 'capacity', 'status')
     list_filter = ('status',)
     search_fields = ('name',)
+
+
+@admin.register(Departement)
+class DepartementAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)    
 
 
 @admin.register(Vehicle)
@@ -26,10 +33,9 @@ class DriverAdmin(admin.ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ('resource_type', 'requester_name', 'start_time', 'end_time', 'status')
-    list_editable = ('status',)
-    list_filter = ('status', 'resource_type')
-    search_fields = ('requester_name',)
+    list_display = ('resource_type', 'requester_name', 'start_time', 'end_time', 'status', 'departement')
+    list_filter = ('status', 'resource_type', 'departement')
+    search_fields = ('requester_name', 'departement__name')
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
@@ -45,3 +51,9 @@ class BookingAdmin(admin.ModelAdmin):
             super().save_model(request, obj, form, change)
         except ValidationError as e:
             form.add_error(None, e)
+
+    # Tambahkan daftar departemen ke konteks template
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['departements'] = Departement.objects.all()
+        return super().changeform_view(request, object_id, form_url, extra_context)
