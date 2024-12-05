@@ -9,13 +9,18 @@ const getElements = () => {
         room: '.field-room',
         vehicle: '.field-vehicle',
         destinationAddress: '.field-destination_address',
+        departement: '.field-departement'
     };
+
+    const requiredSpan = document.createElement('span');
+    requiredSpan.className = 'text-red';
+    requiredSpan.textContent = '* ';
 
     return Object.entries(selectors).reduce((acc, [key, selector]) => ({
         ...acc,
         [`${key}Field`]: document.querySelector(selector),
         [`${key}Input`]: document.querySelector(`[name="${key.replace(/([A-Z])/g, '_$1').toLowerCase()}"]`)
-    }), {});
+    }), { requiredSpan });
 };
 
 const fadeTransition = (hideEl, showEl) => {
@@ -63,7 +68,17 @@ const handleResourceTypeChange = async (e) => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    const { resourceTypeInput: selectResourceType } = getElements();
+    const { resourceTypeInput: selectResourceType, roomField, vehicleField, departementField, requiredSpan } = getElements();
+
+    if (roomField && departementField && vehicleField) {
+        const fields = [roomField, vehicleField, departementField];
+        fields.forEach(field => {
+            const label = field.querySelector('label');
+            if (label) {
+                label.appendChild(requiredSpan.cloneNode(true));
+            }
+        });
+    }
 
     if (selectResourceType) {
         handleResourceTypeChange({
