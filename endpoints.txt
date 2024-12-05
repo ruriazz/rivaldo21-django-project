@@ -1,0 +1,107 @@
+# Get Rooms
+curl -X GET 'http://localhost:8000/api/rooms/'
+
+# Create Room
+curl -X POST 'http://localhost:8000/api/rooms/' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "Room Name",
+    "capacity": 10,
+    "status": "In Use"
+}'
+
+# Get Room Detail (:id number of room id)
+curl -X GET 'http://localhost:8000/api/rooms/:id/'
+
+# Update Room (:id number of room id)
+curl -X PUT 'http://localhost:8000/api/rooms/:id/' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "id": 3,
+    "name": "Room Name Edited",
+    "capacity": 10,
+    "status": "In Use"
+}'
+
+# Delete Room (:id number of room id)
+curl -X DELETE 'http://localhost:8000/api/rooms/:id/'
+
+
+# Get Vehicles
+curl -X GET 'http://localhost:8000/api/vehicles/'
+
+# Create Vehicle
+curl -X POST 'http://localhost:8000/api/vehicles/' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "Name",
+    "type": "Sedan",
+    "capacity": 4,
+    "status": "Under Maintenance",
+    "driver": 4
+}'
+
+# Get Vehicle Detail (:id number of vehicle id)
+curl -X GET 'http://localhost:8000/api/vehicles/:id/'
+
+# Update Vehicle (:id number of vehicle id)
+curl -X PUT 'http://localhost:8000/api/vehicles/:id/' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "id": 5,
+    "name": "Name Updated",
+    "type": "Sedan",
+    "capacity": 4,
+    "status": "Under Maintenance",
+    "driver": 4
+}'
+
+# Delete Vehicle (:id number of vehicle id)
+curl -X DELETE 'http://localhost:8000/api/vehicles/:id/'
+
+
+# Get Bookings
+curl -X GET 'http://localhost:8000/api/bookings/'
+
+# Create Booking
+curl -X POST 'http://localhost:8000/api/bookings/' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "resource_type": "Vehicle",
+    "room": null,
+    "vehicle": 3,
+    "requester_name": "Melania",
+    "start_time": "2024-12-04T04:23:55Z",
+    "end_time": "2024-12-09T06:23:58Z",
+    "destination_address": "Liquica",
+    "travel_description": "Treinamentu DDSIA"
+}'
+
+# Get Booking Detail (:id number of booking id)
+curl -X GET 'http://localhost:8000/api/bookings/:id/'
+
+# Update Booking (:id number of booking id)
+curl -X PUT 'http://localhost:8000/api/bookings/:id/' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "id": 9,
+    "resource_type": "Room",
+    "room": 1,
+    "vehicle": null,
+    "room_details": {
+        "id": 1,
+        "name": "TIC MEETING ROOM EDITED",
+        "capacity": 20,
+        "status": "In Use"
+    },
+    "vehicle_details": null,
+    "requester_name": "Graciela Edited",
+    "start_time": "2024-12-04T02:07:41Z",
+    "end_time": "2024-12-04T04:07:50Z",
+    "destination_address": null,
+    "travel_description": "TIC & MS",
+    "status": "Approved"
+}'
+
+# Delete Booking (:id number of booking id)
+curl -X DELETE 'http://localhost:8000/api/bookings/:id/'
