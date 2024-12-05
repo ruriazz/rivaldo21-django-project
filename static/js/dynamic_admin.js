@@ -1,35 +1,18 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const resourceTypeField = document.querySelector('#id_resource_type');
-    const roomField = document.querySelector('.field-room');
-    const vehicleField = document.querySelector('.field-vehicle');
+    const requiredFields = [
+        { id: 'id_departement', labelFor: 'Departement' },
+        { id: 'id_destination_address', labelFor: 'Destination address' },
+        { id: 'id_room', labelFor: 'Room' },
+        { id: 'id_vehicle', labelFor: 'Vehicle' },
+    ];
 
-    function toggleFields() {
-        const selectedType = resourceTypeField.value;
-
-        if (selectedType === 'Room') {
-            roomField.style.display = '';
-            vehicleField.style.display = 'none';
-        } else if (selectedType === 'Vehicle') {
-            roomField.style.display = 'none';
-            vehicleField.style.display = '';
-        } else {
-            roomField.style.display = 'none';
-            vehicleField.style.display = 'none';
+    requiredFields.forEach((field) => {
+        const element = document.querySelector(`#${field.id}`);
+        if (element) {
+            const label = document.querySelector(`label[for="${field.id}"]`);
+            if (label && !label.innerHTML.includes('*')) {
+                label.innerHTML += ' <span style="color: red;">*</span>';
+            }
         }
-    }
-
-    toggleFields();
-
-    if (resourceTypeField) {
-        resourceTypeField.addEventListener('change', toggleFields);
-    }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    const departementSelect = document.getElementById('departement');
-    if (departementSelect) {
-        departementSelect.addEventListener('change', () => {
-            console.log('Selected Departement:', departementSelect.value);
-        });
-    }
+    });
 });

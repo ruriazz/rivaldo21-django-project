@@ -33,16 +33,17 @@ class DriverAdmin(admin.ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ('resource_type', 'requester_name', 'start_time', 'end_time', 'status', 'departement')
-    list_filter = ('status', 'resource_type', 'departement')
-    search_fields = ('requester_name', 'departement__name')
+    list_display = ['resource_type', 'requester_name', 'start_time', 'end_time', 'status']
+    list_filter = ['status', 'resource_type']
+    search_fields = ['requester_name']
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
-        if obj and obj.resource_type == 'Room':
-            fields.remove('vehicle')
-        elif obj and obj.resource_type == 'Vehicle':
-            fields.remove('room')
+        if obj:  
+            if obj.resource_type == 'Room':
+                fields.remove('destination_address')  
+            elif obj.resource_type == 'Vehicle':
+                fields.remove('room')  
         return fields
 
     def save_model(self, request, obj, form, change):

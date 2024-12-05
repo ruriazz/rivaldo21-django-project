@@ -32,7 +32,6 @@ class RoomViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Filter rooms that are not booked in the given time range
         available_rooms = Room.objects.exclude(
             booking__start_time__lt=end_time,
             booking__end_time__gt=start_time,
@@ -52,7 +51,6 @@ class VehicleViewSet(viewsets.ModelViewSet):
         start_time = request.query_params.get('start_time')
         end_time = request.query_params.get('end_time')
 
-        # Validasi format ISO-8601
         try:
             start_time = datetime.fromisoformat(start_time)
             end_time = datetime.fromisoformat(end_time)
@@ -68,7 +66,6 @@ class VehicleViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Filter vehicles that are not booked in the given time range
         available_vehicles = Vehicle.objects.exclude(
             booking__start_time__lt=end_time,
             booking__end_time__gt=start_time,

@@ -96,7 +96,7 @@ class Booking(models.Model):
         blank=True,
         related_name='bookings'
     )
-    destination_address = models.CharField(max_length=255, null=False, blank=False)
+    destination_address = models.CharField(max_length=255, null=True, blank=True)  
     travel_description = models.TextField(null=False, blank=False)
     requester_name = models.CharField(max_length=100)
     start_time = models.DateTimeField()
@@ -104,14 +104,34 @@ class Booking(models.Model):
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
 
     def clean(self):
+        errors = {}
+
         if self.start_time >= self.end_time:
-            raise ValidationError("Start time must be before end time.")
+            errors['start_time'] = "Start time must be before end time."
 
-        if self.resource_type == 'Room' and self.room.is_in_use(self.start_time, self.end_time):
-            raise ValidationError(f"Room {self.room.name} is already in use.")
+        if self.resource_type == 'Room':
+            if not self.room:
+                errors['room'] = "Room must be selected for Room booking."
+            elif self.room.is_in_use(self.start_time, self.end_time):
+                errors['room'] = f"Room {self.room.name} is already in use for the given time."
 
-        if self.resource_type == 'Vehicle' and self.vehicle.is_in_use(self.start_time, self.end_time):
-            raise ValidationError(f"Vehicle {self.vehicle.name} is already in use.")
+            if self.destination_address:
+                errors['destination_address'] = "Destination address should not be provided for Room bookings."
+
+        elif self.resource_type == 'Vehicle':
+            if not self.vehicle:
+                errors['vehicle'] = "Vehicle must be selected for Vehicle booking."
+            elif self.vehicle.is_in_use(self.start_time, self.end_time):
+                errors['vehicle'] = f"Vehicle {self.vehicle.name} is already in use for the given time."
+
+            if not self.destination_address:
+                errors['destination_address'] = "Destination address is required for Vehicle bookings."
+
+        if not self.departement:
+            errors['departement'] = "Departement is required for all bookings."
+
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self):
         if self.resource_type == 'Room' and self.room:
