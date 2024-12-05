@@ -55,5 +55,5 @@ class BookingAdmin(admin.ModelAdmin):
 
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         extra_context = extra_context or {}
-        extra_context['departements'] = Departement.objects.all()
+        extra_context['required_fields'] = ['departement', 'destination_address', 'room', 'vehicle']
         return super().changeform_view(request, object_id, form_url, extra_context)

@@ -96,7 +96,7 @@ class Booking(models.Model):
         blank=True,
         related_name='bookings'
     )
-    destination_address = models.CharField(max_length=255, null=True, blank=True)  
+    destination_address = models.CharField(max_length=255, null=True, blank=True)
     travel_description = models.TextField(null=False, blank=False)
     requester_name = models.CharField(max_length=100)
     start_time = models.DateTimeField()
@@ -106,30 +106,40 @@ class Booking(models.Model):
     def clean(self):
         errors = {}
 
-        if self.start_time >= self.end_time:
-            errors['start_time'] = "Start time must be before end time."
+        # Validasi waktu mulai dan selesai
+        if self.start_time and self.end_time:
+            if self.start_time >= self.end_time:
+                errors['start_time'] = "Start time must be before end time."
+        else:
+            errors['start_time'] = "Both start_time and end_time must be provided."
 
+        # Validasi resource_type untuk Room
         if self.resource_type == 'Room':
             if not self.room:
                 errors['room'] = "Room must be selected for Room booking."
-            elif self.room.is_in_use(self.start_time, self.end_time):
+            elif self.start_time and self.end_time and self.room.is_in_use(self.start_time, self.end_time):
                 errors['room'] = f"Room {self.room.name} is already in use for the given time."
 
+            # Pastikan destination_address tidak diisi untuk Room
             if self.destination_address:
                 errors['destination_address'] = "Destination address should not be provided for Room bookings."
 
+        # Validasi resource_type untuk Vehicle
         elif self.resource_type == 'Vehicle':
             if not self.vehicle:
                 errors['vehicle'] = "Vehicle must be selected for Vehicle booking."
-            elif self.vehicle.is_in_use(self.start_time, self.end_time):
+            elif self.start_time and self.end_time and self.vehicle.is_in_use(self.start_time, self.end_time):
                 errors['vehicle'] = f"Vehicle {self.vehicle.name} is already in use for the given time."
 
+            # Pastikan destination_address diisi untuk Vehicle
             if not self.destination_address:
                 errors['destination_address'] = "Destination address is required for Vehicle bookings."
 
+        # Validasi Departement
         if not self.departement:
             errors['departement'] = "Departement is required for all bookings."
 
+        # Jika ada error, raise ValidationError
         if errors:
             raise ValidationError(errors)
 
@@ -139,3 +149,4 @@ class Booking(models.Model):
         elif self.resource_type == 'Vehicle' and self.vehicle:
             return f"Vehicle Booking: {self.vehicle.name} by {self.requester_name}"
         return f"{self.resource_type} Booking by {self.requester_name}"
+
