@@ -68,10 +68,17 @@ const handleResourceTypeChange = async (e) => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    const { resourceTypeInput: selectResourceType, roomField, vehicleField, departementField, requiredSpan } = getElements();
+    const {
+        resourceTypeInput: selectResourceType,
+        roomField,
+        vehicleField,
+        departementField,
+        destinationAddressField,
+        requiredSpan
+    } = getElements();
 
-    if (roomField && departementField && vehicleField) {
-        const fields = [roomField, vehicleField, departementField];
+    if (roomField && departementField && vehicleField && destinationAddressField) {
+        const fields = [roomField, vehicleField, departementField, destinationAddressField];
         fields.forEach(field => {
             const label = field.querySelector('label');
             if (label) {
