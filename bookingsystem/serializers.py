@@ -55,6 +55,8 @@ class BookingSerializer(serializers.ModelSerializer):
     room_details = RoomSerializer(source='room', read_only=True)
     vehicle_details = VehicleSerializer(source='vehicle', read_only=True)
     departement_details = DepartementSerializer(source='departement', read_only=True)
+    formatted_start_time = serializers.SerializerMethodField()
+    formatted_end_time = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
@@ -62,9 +64,16 @@ class BookingSerializer(serializers.ModelSerializer):
             'id', 'resource_type', 'room', 'vehicle', 'departement',
             'room_details', 'vehicle_details', 'departement_details',
             'requester_name', 'start_time', 'end_time',
+            'formatted_start_time', 'formatted_end_time',
             'destination_address', 'travel_description', 'status'
         ]
         read_only_fields = ['status']
+
+    def get_formatted_start_time(self, obj):
+        return obj.start_time.strftime('%d-%m-%Y %H:%M')
+
+    def get_formatted_end_time(self, obj):
+        return obj.end_time.strftime('%d-%m-%Y %H:%M')
 
     def validate(self, data):
         start_time = data.get('start_time')
