@@ -26,6 +26,7 @@ class RoomSerializer(serializers.ModelSerializer):
 
 class VehicleSerializer(serializers.ModelSerializer):
     in_use = serializers.SerializerMethodField()
+    driver_name = serializers.SerializerMethodField()  # Add driver_name field
 
     class Meta:
         model = Vehicle
@@ -43,6 +44,9 @@ class VehicleSerializer(serializers.ModelSerializer):
         except (ValueError, TypeError):
             return False
         return False
+
+    def get_driver_name(self, obj):
+        return obj.driver.name if obj.driver else "No Driver Assigned"  # Assuming 'driver' is a ForeignKey to a User model
 
 
 class DepartementSerializer(serializers.ModelSerializer):
@@ -70,23 +74,21 @@ class BookingSerializer(serializers.ModelSerializer):
         read_only_fields = ['status']
 
     def get_formatted_start_time(self, obj):
-        return obj.start_time.strftime('%d-%m-%Y %H:%M')
+        return obj.start_time.strftime('%d-%m-%Y %H:%M') if obj.start_time else None
 
     def get_formatted_end_time(self, obj):
-        return obj.end_time.strftime('%d-%m-%Y %H:%M')
+        return obj.end_time.strftime('%d-%m-%Y %H:%M') if obj.end_time else None
 
     def validate(self, data):
         start_time = data.get('start_time')
         end_time = data.get('end_time')
 
-        # Validasi waktu
         if start_time and end_time:
             if start_time >= end_time:
                 raise serializers.ValidationError("start_time must be earlier than end_time.")
         else:
             raise serializers.ValidationError("Both start_time and end_time must be provided.")
 
-        # Validasi resource_type
         resource_type = data.get('resource_type')
         if resource_type == 'Room':
             if not data.get('room'):
@@ -99,7 +101,6 @@ class BookingSerializer(serializers.ModelSerializer):
             if not data.get('destination_address'):
                 raise serializers.ValidationError("Destination address is required for Vehicle bookings.")
 
-        # Validasi konflik waktu
         overlapping_bookings = Booking.objects.filter(
             resource_type=resource_type,
             start_time__lt=end_time,
@@ -119,19 +120,16 @@ class BookingSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        # Atur status default menjadi Pending
         validated_data['status'] = 'Pending'
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        # Update instance booking
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
         return instance
 
     def to_representation(self, instance):
-        # Kondisional untuk menampilkan data yang relevan
         representation = super().to_representation(instance)
         if instance.resource_type == 'Room':
             representation.pop('vehicle_details', None)
