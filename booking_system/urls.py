@@ -5,7 +5,6 @@ from rest_framework.authtoken.views import obtain_auth_token
 from bookingsystem.views import RoomViewSet, VehicleViewSet, BookingViewSet, DepartementViewSet
 from bookingsystem import views
 
-# DefaultRouter untuk API
 router = DefaultRouter()
 router.register(r'rooms', RoomViewSet, basename='rooms')
 router.register(r'vehicles', VehicleViewSet, basename='vehicles')
