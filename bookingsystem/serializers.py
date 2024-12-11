@@ -1,7 +1,24 @@
 from rest_framework import serializers
+from django.contrib.auth.models import User
 from datetime import datetime
 from .models import Room, Vehicle, Booking, Departement
 
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password']
+        )
+        return user
 
 class RoomSerializer(serializers.ModelSerializer):
     in_use = serializers.SerializerMethodField()
@@ -26,7 +43,7 @@ class RoomSerializer(serializers.ModelSerializer):
 
 class VehicleSerializer(serializers.ModelSerializer):
     in_use = serializers.SerializerMethodField()
-    driver_name = serializers.SerializerMethodField()  # Add driver_name field
+    driver_name = serializers.SerializerMethodField() 
 
     class Meta:
         model = Vehicle
@@ -46,7 +63,7 @@ class VehicleSerializer(serializers.ModelSerializer):
         return False
 
     def get_driver_name(self, obj):
-        return obj.driver.name if obj.driver else "No Driver Assigned"  # Assuming 'driver' is a ForeignKey to a User model
+        return obj.driver.name if obj.driver else "No Driver Assigned"
 
 
 class DepartementSerializer(serializers.ModelSerializer):
@@ -72,6 +89,9 @@ class BookingSerializer(serializers.ModelSerializer):
             'destination_address', 'travel_description', 'status'
         ]
         read_only_fields = ['status']
+        extra_kwargs = {  
+            'requester_name': {'read_only': True}
+        }
 
     def get_formatted_start_time(self, obj):
         return obj.start_time.strftime('%d-%m-%Y %H:%M') if obj.start_time else None
@@ -120,6 +140,13 @@ class BookingSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        request = self.context.get('request')  
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            validated_data['requester_name'] = request.user.username
+        else:
+            raise serializers.ValidationError({
+                "requester_name": "Authentication credentials were not provided."
+            })
         validated_data['status'] = 'Pending'
         return super().create(validated_data)
 
@@ -136,3 +163,5 @@ class BookingSerializer(serializers.ModelSerializer):
         elif instance.resource_type == 'Vehicle':
             representation.pop('room_details', None)
         return representation
+
+

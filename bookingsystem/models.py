@@ -1,6 +1,5 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.db.models import Q
 
 
 class Departement(models.Model):
@@ -31,9 +30,7 @@ class Room(models.Model):
         return self.name
 
     def is_in_use(self, start_time, end_time):
-        return Booking.objects.filter(
-            resource_type='Room',
-            room=self,
+        return self.bookings.filter(
             start_time__lt=end_time,
             end_time__gt=start_time,
             status='Approved'
@@ -66,9 +63,7 @@ class Vehicle(models.Model):
         return f"{self.name} ({self.driver.name if self.driver else 'No Driver'})"
 
     def is_in_use(self, start_time, end_time):
-        return Booking.objects.filter(
-            resource_type='Vehicle',
-            vehicle=self,
+        return self.bookings.filter(
             start_time__lt=end_time,
             end_time__gt=start_time,
             status='Approved'
@@ -87,10 +82,10 @@ class Booking(models.Model):
     ]
 
     resource_type = models.CharField(max_length=50, choices=RESOURCE_TYPE_CHOICES)
-    room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True)
-    vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True, blank=True)
+    room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')
     departement = models.ForeignKey(
-        'Departement',
+        Departement,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -105,7 +100,6 @@ class Booking(models.Model):
 
     def clean(self):
         errors = {}
-
         # Validasi waktu mulai dan selesai
         if self.start_time and self.end_time:
             if self.start_time >= self.end_time:
@@ -120,26 +114,21 @@ class Booking(models.Model):
             elif self.start_time and self.end_time and self.room.is_in_use(self.start_time, self.end_time):
                 errors['room'] = f"Room {self.room.name} is already in use for the given time."
 
-            # Pastikan destination_address tidak diisi untuk Room
             if self.destination_address:
                 errors['destination_address'] = "Destination address should not be provided for Room bookings."
 
-        # Validasi resource_type untuk Vehicle
         elif self.resource_type == 'Vehicle':
             if not self.vehicle:
                 errors['vehicle'] = "Vehicle must be selected for Vehicle booking."
             elif self.start_time and self.end_time and self.vehicle.is_in_use(self.start_time, self.end_time):
                 errors['vehicle'] = f"Vehicle {self.vehicle.name} is already in use for the given time."
 
-            # Pastikan destination_address diisi untuk Vehicle
             if not self.destination_address:
                 errors['destination_address'] = "Destination address is required for Vehicle bookings."
 
-        # Validasi Departement
         if not self.departement:
             errors['departement'] = "Departement is required for all bookings."
 
-        # Jika ada error, raise ValidationError
         if errors:
             raise ValidationError(errors)
 
@@ -149,4 +138,3 @@ class Booking(models.Model):
         elif self.resource_type == 'Vehicle' and self.vehicle:
             return f"Vehicle Booking: {self.vehicle.name} by {self.requester_name}"
         return f"{self.resource_type} Booking by {self.requester_name}"
-

@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ['django-project-2-umgw.onrender.com', '127.0.0.1', 'localhost']
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
+    'django_extensions',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -41,8 +42,9 @@ INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
 
     # Add your custom app here
-    'bookingsystem',
-    'rest_framework',      # Django REST Framework
+    'rest_framework',
+    'rest_framework.authtoken', 
+    'bookingsystem',  
 ]
 
 MIDDLEWARE = [
@@ -130,6 +132,12 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,  # Tampilkan 10 item per halaman
 }

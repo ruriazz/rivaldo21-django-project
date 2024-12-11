@@ -1,90 +1,124 @@
 from django.shortcuts import render
-from rest_framework.decorators import action
+from datetime import datetime
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import viewsets, status
-from datetime import datetime
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
 from .models import Room, Vehicle, Booking, Departement
-from .serializers import RoomSerializer, VehicleSerializer, BookingSerializer, DepartementSerializer
+from .serializers import (
+    RoomSerializer,
+    VehicleSerializer,
+    BookingSerializer,
+    DepartementSerializer,
+)
 
+class BookingViewSet(viewsets.ModelViewSet):
+    queryset = Booking.objects.select_related('room', 'vehicle', 'departement').all()
+    serializer_class = BookingSerializer
+    authentication_classes = [TokenAuthentication]
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    def perform_create(self, serializer):
+        if self.request.user.is_authenticated:
+            serializer.save(requester_name=self.request.user.username)
+        else:
+            serializer.save()
 
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
 
+    def get_permissions(self):
+        if self.action == 'list':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
     @action(detail=False, methods=['get'])
     def available(self, request):
         start_time = request.query_params.get('start_time')
         end_time = request.query_params.get('end_time')
-
-        # Validasi format ISO-8601
+        if not start_time or not end_time:
+            return Response(
+                {"error": "start_time and end_time are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         try:
             start_time = datetime.fromisoformat(start_time)
             end_time = datetime.fromisoformat(end_time)
-        except (ValueError, TypeError):
+        except ValueError:
             return Response(
-                {"error": "start_time and end_time must be in ISO-8601 format"},
+                {"error": "start_time and end_time must be in ISO-8601 format."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         if start_time >= end_time:
             return Response(
-                {"error": "start_time must be earlier than end_time"},
+                {"error": "start_time must be earlier than end_time."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         available_rooms = Room.objects.exclude(
             booking__start_time__lt=end_time,
             booking__end_time__gt=start_time,
             booking__status='Approved'
         )
-
-        serializer = self.get_serializer(available_rooms, many=True, context={'request': request})
+        serializer = self.get_serializer(available_rooms, many=True)
         return Response(serializer.data)
-
 
 class VehicleViewSet(viewsets.ModelViewSet):
     queryset = Vehicle.objects.all()
     serializer_class = VehicleSerializer
 
+    def get_permissions(self):
+        if self.action == 'list':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
     @action(detail=False, methods=['get'])
     def available(self, request):
         start_time = request.query_params.get('start_time')
         end_time = request.query_params.get('end_time')
-
+        if not start_time or not end_time:
+            return Response(
+                {"error": "start_time and end_time are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         try:
             start_time = datetime.fromisoformat(start_time)
             end_time = datetime.fromisoformat(end_time)
-        except (ValueError, TypeError):
+        except ValueError:
             return Response(
-                {"error": "start_time and end_time must be in ISO-8601 format"},
+                {"error": "start_time and end_time must be in ISO-8601 format."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         if start_time >= end_time:
             return Response(
-                {"error": "start_time must be earlier than end_time"},
+                {"error": "start_time must be earlier than end_time."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         available_vehicles = Vehicle.objects.exclude(
             booking__start_time__lt=end_time,
             booking__end_time__gt=start_time,
             booking__status='Approved'
         )
-
-        serializer = self.get_serializer(available_vehicles, many=True, context={'request': request})
+        serializer = self.get_serializer(available_vehicles, many=True)
         return Response(serializer.data)
-
 
 class DepartementViewSet(viewsets.ModelViewSet):
     queryset = Departement.objects.all()
     serializer_class = DepartementSerializer
 
-
-class BookingViewSet(viewsets.ModelViewSet):
-    queryset = Booking.objects.select_related('room', 'vehicle', 'departement').all()
-    serializer_class = BookingSerializer
-
+    def get_permissions(self):
+        if self.action == 'list':
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
 def dashboard(request):
     rooms = Room.objects.all()
