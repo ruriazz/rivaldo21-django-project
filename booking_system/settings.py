@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'bookingsystem',  
 ]
 
+AUTH_USER_MODEL = 'bookingsystem.CustomUser'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',

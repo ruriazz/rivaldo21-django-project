@@ -1,8 +1,27 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from .models import Purpose
 from datetime import datetime
-from .models import Room, Vehicle, Booking, Departement
+from django.contrib.auth import authenticate
+from rest_framework.exceptions import AuthenticationFailed
+from .models import Room, Vehicle, Booking, Departement, Purpose
 
+class CustomLoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        username = data.get('username')
+        password = data.get('password')
+
+        user = authenticate(username=username, password=password)
+        if not user:
+            raise AuthenticationFailed("Invalid username or password.")
+
+        if not user.is_active:
+            raise AuthenticationFailed("User account is disabled.")
+
+        return {"user": user}
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -71,19 +90,27 @@ class DepartementSerializer(serializers.ModelSerializer):
         model = Departement
         fields = '__all__'
 
+class PurposeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Purpose
+        fields = '__all__'        
+
 
 class BookingSerializer(serializers.ModelSerializer):
     room_details = RoomSerializer(source='room', read_only=True)
     vehicle_details = VehicleSerializer(source='vehicle', read_only=True)
+    purpose_details = PurposeSerializer(source='purpose', read_only=True)
     departement_details = DepartementSerializer(source='departement', read_only=True)
     formatted_start_time = serializers.SerializerMethodField()
     formatted_end_time = serializers.SerializerMethodField()
 
-    class Meta:
+    class Meta:  # Pastikan indentasi sejajar
         model = Booking
         fields = [
-            'id', 'resource_type', 'room', 'vehicle', 'departement',
-            'room_details', 'vehicle_details', 'departement_details',
+            'id', 'resource_type', 'purpose', 'purpose_details',
+            'room', 'room_details',
+            'vehicle', 'vehicle_details',
+            'departement', 'departement_details',
             'requester_name', 'start_time', 'end_time',
             'formatted_start_time', 'formatted_end_time',
             'destination_address', 'travel_description', 'status'

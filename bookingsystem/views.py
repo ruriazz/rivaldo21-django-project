@@ -2,17 +2,41 @@ from django.shortcuts import render
 from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+from .serializers import CustomLoginSerializer
 from rest_framework import viewsets, status
+from .serializers import CustomLoginSerializer
 from rest_framework.decorators import action
+from rest_framework.viewsets import ModelViewSet  
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
-from .models import Room, Vehicle, Booking, Departement
+from .models import Purpose, Room, Vehicle, Booking, Departement
 from .serializers import (
+    PurposeSerializer,
     RoomSerializer,
     VehicleSerializer,
     BookingSerializer,
     DepartementSerializer,
 )
+
+class LoginAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = CustomLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+
+        # Buat token untuk user
+        token, created = Token.objects.get_or_create(user=user)
+
+        return Response({
+            "token": token.key,
+            "user_id": user.id,
+            "username": user.username
+        })
+
+class PurposeViewSet(ModelViewSet):
+    queryset = Purpose.objects.all()
+    serializer_class = PurposeSerializer
 
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.select_related('room', 'vehicle', 'departement').all()

@@ -1,8 +1,38 @@
 from django.contrib import admin
 from django.shortcuts import render
+from django.contrib.auth.admin import UserAdmin
+from .forms import CustomUserCreationForm, CustomUserChangeForm
+from .models import CustomUser
+from .models import Purpose
 from .models import Room, Vehicle, Booking, Driver, Departement
 from django.core.exceptions import ValidationError
 
+class CustomUserAdmin(UserAdmin):
+    add_form = CustomUserCreationForm
+    form = CustomUserChangeForm
+    model = CustomUser
+    list_display = ['username', 'email', 'first_name', 'last_name', 'is_staff']
+
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        ('Personal info', {'fields': ('email', 'first_name', 'last_name')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+    )
+
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'first_name', 'last_name', 'password1', 'password2'),
+        }),
+    )
+
+admin.site.register(CustomUser, CustomUserAdmin)
+
+@admin.register(Purpose)
+class PurposeAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
@@ -33,17 +63,17 @@ class DriverAdmin(admin.ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ['resource_type', 'requester_name', 'start_time', 'end_time', 'status']
-    list_filter = ['status', 'resource_type']
-    search_fields = ['requester_name']
+    list_display = ['resource_type', 'purpose', 'requester_name', 'start_time', 'end_time', 'status']
+    list_filter = ['status', 'resource_type', 'purpose']
+    search_fields = ['requester_name__username', 'purpose__name']
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
-        if obj:  
+        if obj:
             if obj.resource_type == 'Room':
-                fields.remove('destination_address')  
+                fields.remove('destination_address')
             elif obj.resource_type == 'Vehicle':
-                fields.remove('room')  
+                fields.remove('room')
         return fields
 
     def save_model(self, request, obj, form, change):
