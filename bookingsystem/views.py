@@ -21,17 +21,21 @@ from .serializers import (
 
 class LoginAPIView(APIView):
     def post(self, request, *args, **kwargs):
+        print(request.data)
         serializer = CustomLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
 
-        # Buat token untuk user
-        token, created = Token.objects.get_or_create(user=user)
+        serializer = CustomLoginSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.validated_data['user']
+            token, created = Token.objects.get_or_create(user=user)
 
         return Response({
             "token": token.key,
             "user_id": user.id,
-            "username": user.username
+            "username": user.username,
+            "email": user.email,
         })
 
 class PurposeViewSet(ModelViewSet):

@@ -33,7 +33,7 @@ ALLOWED_HOSTS = ['django-project-2-umgw.onrender.com', '127.0.0.1', 'localhost']
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
-    'django_extensions',
+    # 'django_extensions',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -131,7 +131,7 @@ USE_TZ = True
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -141,7 +141,7 @@ REST_FRAMEWORK = {
     #     'rest_framework.permissions.IsAuthenticated',
     # ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,  # Tampilkan 10 item per halaman
+    'PAGE_SIZE': 10,  # Display 10 items per page.
 }
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

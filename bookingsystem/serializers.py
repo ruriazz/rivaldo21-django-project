@@ -7,16 +7,18 @@ from rest_framework.exceptions import AuthenticationFailed
 from .models import Room, Vehicle, Booking, Departement, Purpose
 
 class CustomLoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    username_or_email = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        username = data.get('username')
+        username_or_email = data.get('username_or_email')
         password = data.get('password')
 
-        user = authenticate(username=username, password=password)
-        if not user:
-            raise AuthenticationFailed("Invalid username or password.")
+        user = (User.objects.filter(username=username_or_email).first() or
+                User.objects.filter(email=username_or_email).first())
+
+        if not user or not user.check_password(password):
+            raise AuthenticationFailed("Invalid username/email or password.")
 
         if not user.is_active:
             raise AuthenticationFailed("User account is disabled.")
@@ -104,7 +106,7 @@ class BookingSerializer(serializers.ModelSerializer):
     formatted_start_time = serializers.SerializerMethodField()
     formatted_end_time = serializers.SerializerMethodField()
 
-    class Meta:  # Pastikan indentasi sejajar
+    class Meta:  
         model = Booking
         fields = [
             'id', 'resource_type', 'purpose', 'purpose_details',

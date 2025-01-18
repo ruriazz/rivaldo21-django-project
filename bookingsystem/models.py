@@ -131,14 +131,6 @@ class Booking(models.Model):
         related_name='bookings'
     )
 
-    requester_name = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,  # Set to NULL if user is deleted
-        null=True,  # Allow NULL values
-        related_name='bookings',
-        verbose_name='Requester'
-    )
-
     destination_address = models.CharField(max_length=255, null=True, blank=True)
     travel_description = models.TextField(null=False, blank=False)
     requester_name = models.ForeignKey(
