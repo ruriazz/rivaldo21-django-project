@@ -225,6 +225,7 @@
                         <th>Room Name</th>
                         <th>Requester</th>
                         <th>Departement</th>
+                        <th>Purpose</th> 
                         <th>Description</th>
                         <th>Start Time</th>
                         <th>End Time</th>
@@ -244,6 +245,7 @@
                                         No Departement
                                     {% endif %}
                                 </td>
+                                <td>{{ booking.purpose.name }}</td>
                                 <td>{{ booking.travel_description|default:"-" }}</td>
                                 <td>{{ booking.start_time|date:"Y-m-d H:i" }}</td>
                                 <td>{{ booking.end_time|date:"Y-m-d H:i" }}</td>
@@ -262,12 +264,13 @@
     <table>
         <thead>
             <tr>
-                <th>Vehicle Name</th>
+                <th>Vehicle</th>
                 <th>Requester</th>
                 <th>Departement</th>
-                <th>Driver</th>
-                <th>Destination Address</th>
-                <th>Travel Description</th>
+                <th>Purpose</th>
+                <th>Driver</th> 
+                <th>Destination</th>
+                <th>Description</th>
                 <th>Start Time</th>
                 <th>End Time</th>
                 <th>Status</th>
@@ -284,6 +287,13 @@
                                 {{ booking.departement.name }}
                             {% else %}
                                 No Departement
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if booking.purpose %}
+                                {{ booking.purpose.name }} 
+                            {% else %}
+                                No Purpose
                             {% endif %}
                         </td>
                         <td>
