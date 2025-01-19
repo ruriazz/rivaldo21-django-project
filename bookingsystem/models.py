@@ -21,12 +21,12 @@ class CustomUser(AbstractUser):
 
     groups = models.ManyToManyField(
         'auth.Group',
-        related_name='customuser_groups',  # Tambahkan related_name yang unik
+        related_name='customuser_groups',  
         blank=True,
     )
     user_permissions = models.ManyToManyField(
         'auth.Permission',
-        related_name='customuser_permissions',  # Tambahkan related_name yang unik
+        related_name='customuser_permissions',  
         blank=True,
     )
 
