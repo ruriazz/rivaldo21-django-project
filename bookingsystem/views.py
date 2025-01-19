@@ -46,7 +46,7 @@ class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.select_related('room', 'vehicle', 'departement').all()
     serializer_class = BookingSerializer
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated] 
+    permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
         if self.action == 'list':
@@ -57,8 +57,10 @@ class BookingViewSet(viewsets.ModelViewSet):
         return {'request': self.request}
 
     def perform_create(self, serializer):
-        if self.request.user.is_authenticated:
-            serializer.save(requester_name=self.request.user)
+        if self.request.user.is_authenticated:  
+            user = self.request.user  
+            print(f"Creating booking for user: {user}")  
+            serializer.save(requester_name=user)  
 
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()

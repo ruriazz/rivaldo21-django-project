@@ -117,7 +117,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'formatted_start_time', 'formatted_end_time',
             'destination_address', 'travel_description', 'status',
 
-            ]
+        ]
         read_only_fields = ['status', 'requester_name'] 
 
     def get_formatted_start_time(self, obj):
@@ -168,15 +168,17 @@ class BookingSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        request = self.context.get('request')  
+        request = self.context.get('request')
         if request and hasattr(request, 'user') and request.user.is_authenticated:
-            validated_data['requester_name'] = request.user.username
+            validated_data['requester_name'] = request.user  
         else:
             raise serializers.ValidationError({
                 "requester_name": "Authentication credentials were not provided."
             })
+        
         validated_data['status'] = 'Pending'
         return super().create(validated_data)
+
 
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
