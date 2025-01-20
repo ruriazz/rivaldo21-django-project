@@ -57,10 +57,12 @@ class BookingViewSet(viewsets.ModelViewSet):
         return {'request': self.request}
 
     def perform_create(self, serializer):
-        if self.request.user.is_authenticated:  
-            user = self.request.user  
-            print(f"Creating booking for user: {user}")  
-            serializer.save(requester_name=user)  
+        if self.request.user.is_authenticated:
+            serializer.save(requester_name=self.request.user)
+        else:
+            raise serializers.ValidationError({
+                "requester_name": "Authentication credentials were not provided."
+            }) 
 
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()

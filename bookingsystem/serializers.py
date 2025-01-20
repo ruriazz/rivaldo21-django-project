@@ -121,7 +121,7 @@ class BookingSerializer(serializers.ModelSerializer):
         read_only_fields = ['status', 'requester_name']
 
     def validate(self, data):
-        # Validasi untuk purpose jika perlu
+        # Validasaun ba purpose
         if 'purpose' not in data:
             raise serializers.ValidationError("Purpose is required.")
         return data 
