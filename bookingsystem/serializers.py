@@ -118,7 +118,13 @@ class BookingSerializer(serializers.ModelSerializer):
             'destination_address', 'travel_description', 'status',
 
         ]
-        read_only_fields = ['status', 'requester_name'] 
+        read_only_fields = ['status', 'requester_name']
+
+    def validate(self, data):
+        # Validasi untuk purpose jika perlu
+        if 'purpose' not in data:
+            raise serializers.ValidationError("Purpose is required.")
+        return data 
 
     def get_formatted_start_time(self, obj):
         return obj.start_time.strftime('%d-%m-%Y %H:%M') if obj.start_time else None
