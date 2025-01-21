@@ -14,8 +14,10 @@ class CustomLoginSerializer(serializers.Serializer):
         username_or_email = data.get('username_or_email')
         password = data.get('password')
 
-        user = (User.objects.filter(username=username_or_email).first() or
-                User.objects.filter(email=username_or_email).first())
+        user = (
+            CustomUser.objects.filter(username=username_or_email).first() or
+            CustomUser.objects.filter(email=username_or_email).first()
+        )
 
         if not user or not user.check_password(password):
             raise AuthenticationFailed("Invalid username/email or password.")

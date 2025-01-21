@@ -48,6 +48,10 @@ class BookingViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
+    def list(self, request, *args, **kwargs):
+        print(f"Token diterima: {request.META.get('HTTP_AUTHORIZATION')}")
+        return super().list(request, *args, **kwargs)
+
     def get_permissions(self):
         if self.action == 'list':
             return [AllowAny()]  
