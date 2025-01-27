@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Purpose
+from .models import Booking
+from django.db.models import Q
 from datetime import datetime
 from django.contrib.auth import authenticate
 from rest_framework.exceptions import AuthenticationFailed
@@ -118,33 +120,24 @@ class BookingSerializer(serializers.ModelSerializer):
             'requester_name', 'start_time', 'end_time',
             'formatted_start_time', 'formatted_end_time',
             'destination_address', 'travel_description', 'status',
-
         ]
         read_only_fields = ['status', 'requester_name']
 
     def validate(self, data):
-        # Validasaun ba purpose
-        if 'purpose' not in data:
-            raise serializers.ValidationError("Purpose is required.")
-        return data 
-
-    def get_formatted_start_time(self, obj):
-        return obj.start_time.strftime('%d-%m-%Y %H:%M') if obj.start_time else None
-
-    def get_formatted_end_time(self, obj):
-        return obj.end_time.strftime('%d-%m-%Y %H:%M') if obj.end_time else None
-
-
-    def validate(self, data):
+        # Validasi waktu
         start_time = data.get('start_time')
         end_time = data.get('end_time')
 
-        if start_time and end_time:
-            if start_time >= end_time:
-                raise serializers.ValidationError("start_time must be earlier than end_time.")
-        else:
+        if not start_time or not end_time:
             raise serializers.ValidationError("Both start_time and end_time must be provided.")
+        if start_time >= end_time:
+            raise serializers.ValidationError("start_time must be earlier than end_time.")
 
+            # Validasi purpose
+        if 'purpose' not in data or not data.get('purpose'):
+            raise serializers.ValidationError("Purpose is required.")
+
+        # Validasi resource type
         resource_type = data.get('resource_type')
         if resource_type == 'Room':
             if not data.get('room'):
@@ -156,13 +149,16 @@ class BookingSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Vehicle must be selected for Vehicle bookings.")
             if not data.get('destination_address'):
                 raise serializers.ValidationError("Destination address is required for Vehicle bookings.")
+        else:
+            raise serializers.ValidationError("Invalid resource_type. Must be 'Room' or 'Vehicle'.")
 
+        # Validasi konflik booking
         overlapping_bookings = Booking.objects.filter(
             resource_type=resource_type,
             start_time__lt=end_time,
-            end_time__gt=start_time,
-            status='Approved'
-        )
+            end_time__gt=start_time
+        ).exclude(status__in=['Rejected', 'Cancelled'])
+
         if resource_type == 'Room':
             overlapping_bookings = overlapping_bookings.filter(room=data.get('room'))
         elif resource_type == 'Vehicle':
@@ -178,21 +174,20 @@ class BookingSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get('request')
         if request and hasattr(request, 'user') and request.user.is_authenticated:
-            validated_data['requester_name'] = request.user  
+            validated_data['requester_name'] = request.user
         else:
             raise serializers.ValidationError({
                 "requester_name": "Authentication credentials were not provided."
             })
-        
+
         validated_data['status'] = 'Pending'
         return super().create(validated_data)
 
+    def get_formatted_start_time(self, obj):
+        return obj.start_time.strftime('%d-%m-%Y %H:%M') if obj.start_time else None
 
-    def update(self, instance, validated_data):
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        return instance
+    def get_formatted_end_time(self, obj):
+        return obj.end_time.strftime('%d-%m-%Y %H:%M') if obj.end_time else None
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
