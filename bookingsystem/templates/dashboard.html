@@ -225,7 +225,7 @@
                         <th>Room Name</th>
                         <th>Requester</th>
                         <th>Departement</th>
-                        <th>Purpose</th> 
+                        <th>Purpose</th>
                         <th>Description</th>
                         <th>Start Time</th>
                         <th>End Time</th>
@@ -268,7 +268,7 @@
                 <th>Requester</th>
                 <th>Departement</th>
                 <th>Purpose</th>
-                <th>Driver</th> 
+                <th>Driver</th>
                 <th>Destination</th>
                 <th>Description</th>
                 <th>Start Time</th>
@@ -291,7 +291,7 @@
                         </td>
                         <td>
                             {% if booking.purpose %}
-                                {{ booking.purpose.name }} 
+                                {{ booking.purpose.name }}
                             {% else %}
                                 No Purpose
                             {% endif %}
@@ -320,5 +320,16 @@
 
         </div>
     </div>
+
+    <script>
+        {% comment %} console.log('Script loaded');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            alert('You have been logged out!');
+            setTimeout(function() {
+                window.location.href = "{% url 'admin:index' %}";
+            }, 2000);
+        }); {% endcomment %}
+    </script>
 </body>
 </html>
