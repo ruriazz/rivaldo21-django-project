@@ -43,8 +43,8 @@ INSTALLED_APPS = [
 
     # Add your custom app here
     'rest_framework',
-    'rest_framework.authtoken', 
-    'bookingsystem',  
+    'rest_framework.authtoken',
+    'bookingsystem',
 ]
 
 AUTH_USER_MODEL = 'bookingsystem.CustomUser'
@@ -65,7 +65,7 @@ ROOT_URLCONF = 'booking_system.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -155,3 +155,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 JAZZMIN_SETTINGS = {
     'custom_js': 'js/create_booking_custom.js',
 }
+
+APP_URL = 'http://localhost:8000'

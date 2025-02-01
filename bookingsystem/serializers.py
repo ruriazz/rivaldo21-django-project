@@ -68,7 +68,7 @@ class RoomSerializer(serializers.ModelSerializer):
 
 class VehicleSerializer(serializers.ModelSerializer):
     in_use = serializers.SerializerMethodField()
-    driver_name = serializers.SerializerMethodField() 
+    driver_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Vehicle
@@ -99,7 +99,7 @@ class DepartementSerializer(serializers.ModelSerializer):
 class PurposeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Purpose
-        fields = '__all__'        
+        fields = '__all__'
 
 
 class BookingSerializer(serializers.ModelSerializer):

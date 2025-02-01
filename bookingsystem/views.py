@@ -7,10 +7,15 @@ from .serializers import CustomLoginSerializer
 from rest_framework import viewsets, status
 from .serializers import CustomLoginSerializer
 from rest_framework.decorators import action
-from rest_framework.viewsets import ModelViewSet  
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
-from .models import Purpose, Room, Vehicle, Booking, Departement
+from .models import Purpose, Room, Vehicle, Booking, Departement, CustomUser
+from bookingsystem.enums import UserRoles
+from bookingsystem.utils.notification import (
+    FCMNotification,
+    FirebaseNotificationPayload,
+)
 from .serializers import (
     PurposeSerializer,
     RoomSerializer,
@@ -52,9 +57,24 @@ class BookingViewSet(viewsets.ModelViewSet):
         print(f"Token diterima: {request.META.get('HTTP_AUTHORIZATION')}")
         return super().list(request, *args, **kwargs)
 
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+
+        drivers = CustomUser.objects.filter(role=UserRoles.DRIVER.value)
+        payload = FirebaseNotificationPayload(
+            title="Hooray! A New Booking Just Came In!",
+            body="A new booking has just been secured! Don't miss the chance to prepare and make this event unforgettable. Click here for more information!",
+            data={"click_action": f"/admin/bookingsystem/booking/{response.data['id']}/change/", 'ref': f"booking:{response.data['id']}"},
+        )
+        FCMNotification(payload).send(
+            users=list(drivers)
+        )
+
+        return response
+
     def get_permissions(self):
         if self.action == 'list':
-            return [AllowAny()]  
+            return [AllowAny()]
         return [IsAuthenticated()]
 
     def get_serializer_context(self):
@@ -62,11 +82,11 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
-            serializer.save(requester_name=self.request.user)
+            booking = serializer.save(requester_name=self.request.user)
         else:
             raise serializers.ValidationError({
                 "requester_name": "Authentication credentials were not provided."
-            }) 
+            })
 
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()

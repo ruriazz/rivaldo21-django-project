@@ -1,10 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.contrib.auth.models import AbstractUser
-from django.core.validators import MinLengthValidator
 from django.core.validators import MinLengthValidator
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from bookingsystem.enums import UserRoles
 
 class CustomUser(AbstractUser):
     username = models.CharField(
@@ -18,19 +17,26 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
+    role = models.CharField(
+        max_length=50,
+        choices=UserRoles.choices(),
+        default=UserRoles.ADMIN.value,
+        blank=False,
+        null=True
+    )
 
     groups = models.ManyToManyField(
         'auth.Group',
-        related_name='customuser_groups',  
+        related_name='customuser_groups',
         blank=True,
     )
     user_permissions = models.ManyToManyField(
         'auth.Permission',
-        related_name='customuser_permissions',  
+        related_name='customuser_permissions',
         blank=True,
     )
 
-    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name', 'role']
 
     def __str__(self):
         return self.username
@@ -103,10 +109,10 @@ class Vehicle(models.Model):
         ).exists()
 
 class Purpose(models.Model):
-    name = models.CharField(max_length=100, unique=True)  
+    name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
-        return self.name 
+        return self.name
 
 class Booking(models.Model):
     RESOURCE_TYPE_CHOICES = [
@@ -145,3 +151,20 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.resource_type} Booking for {self.purpose} by {self.requester_name}"
+
+class FCMToken(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=False, related_name='fcm_tokens')
+    token = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.token
+
+class UserNotification(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='notifications')
+    payload = models.JSONField()
+    is_read = models.BooleanField(default=False)
+    fcm_sent_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title

@@ -15,7 +15,7 @@ class CustomUserAdmin(UserAdmin):
 
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('email', 'first_name', 'last_name')}),
+        ('Personal info', {'fields': ('email', 'first_name', 'last_name', 'role')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
@@ -23,7 +23,7 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'email', 'first_name', 'last_name', 'password1', 'password2'),
+            'fields': ('username', 'email', 'first_name', 'last_name', 'role', 'password1', 'password2'),
         }),
     )
 
@@ -44,7 +44,7 @@ class RoomAdmin(admin.ModelAdmin):
 @admin.register(Departement)
 class DepartementAdmin(admin.ModelAdmin):
     list_display = ('name',)
-    search_fields = ('name',)    
+    search_fields = ('name',)
 
 
 @admin.register(Vehicle)
