@@ -118,6 +118,7 @@ class Booking(models.Model):
     RESOURCE_TYPE_CHOICES = [
         ('Room', 'Room'),
         ('Vehicle', 'Vehicle'),
+         ('Executive Meeting', 'Executive Meeting'),
     ]
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
@@ -167,4 +168,24 @@ class UserNotification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.title
+        return f"Notification for {self.user.username}"
+    
+class ExecutiveMeeting(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+    ]
+
+    agenda = models.CharField(max_length=255)
+    purpose = models.ForeignKey('Purpose', on_delete=models.SET_NULL, null=True, related_name='executive_meetings')
+    requester_name = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='executive_meetings')
+    location = models.CharField(max_length=255)
+    participants = models.TextField(help_text="List of participants (separated by commas)")
+    departement = models.ForeignKey('Departement', on_delete=models.SET_NULL, null=True, related_name='executive_meetings')
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
+
+    def __str__(self):
+        return f"Executive Meeting: {self.agenda} by {self.requester_name}"

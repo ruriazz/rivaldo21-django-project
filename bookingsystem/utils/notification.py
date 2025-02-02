@@ -67,8 +67,7 @@ class FCMNotification:
                 cred = credentials.Certificate(
                     Path.joinpath(
                         BASE_DIR,
-                        "bookingsystem/config/firebase",
-                        "service-account.json",
+                        "D:/django-project/bookingsystem/config/firebase/service-account.json",
                     )
                 )
                 firebase_admin.initialize_app(cred)

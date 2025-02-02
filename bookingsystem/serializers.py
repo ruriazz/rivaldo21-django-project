@@ -4,9 +4,10 @@ from .models import Purpose
 from .models import Booking
 from django.db.models import Q
 from datetime import datetime
+from .models import CustomUser
 from django.contrib.auth import authenticate
 from rest_framework.exceptions import AuthenticationFailed
-from .models import Room, Vehicle, Booking, Departement, Purpose
+from .models import ExecutiveMeeting, Purpose, Booking, Room, Vehicle, Departement
 
 class CustomLoginSerializer(serializers.Serializer):
     username_or_email = serializers.CharField()
@@ -100,6 +101,29 @@ class PurposeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Purpose
         fields = '__all__'
+
+
+class ExecutiveMeetingSerializer(serializers.ModelSerializer):
+    purpose_details = PurposeSerializer(source='purpose', read_only=True)
+    departement_details = DepartementSerializer(source='departement', read_only=True)
+    formatted_start_time = serializers.SerializerMethodField()
+    formatted_end_time = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ExecutiveMeeting
+        fields = [
+            'id', 'agenda', 'purpose', 'purpose_details',
+            'requester_name', 'location', 'participants',
+            'departement', 'departement_details',
+            'start_time', 'end_time', 'formatted_start_time', 'formatted_end_time', 'status'
+        ]
+        read_only_fields = ['status', 'requester_name']
+
+    def get_formatted_start_time(self, obj):
+        return obj.start_time.strftime('%d-%m-%Y %H:%M') if obj.start_time else None
+
+    def get_formatted_end_time(self, obj):
+        return obj.end_time.strftime('%d-%m-%Y %H:%M') if obj.end_time else None
 
 
 class BookingSerializer(serializers.ModelSerializer):

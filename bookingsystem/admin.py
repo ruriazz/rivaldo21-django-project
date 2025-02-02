@@ -4,6 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 from .models import CustomUser
 from .models import Purpose
+from .models import ExecutiveMeeting
 from .models import Room, Vehicle, Booking, Driver, Departement
 from django.core.exceptions import ValidationError
 
@@ -59,6 +60,20 @@ class VehicleAdmin(admin.ModelAdmin):
 class DriverAdmin(admin.ModelAdmin):
     list_display = ('name', 'license_number')
     search_fields = ('name', 'license_number')
+
+
+@admin.register(ExecutiveMeeting)
+class ExecutiveMeetingAdmin(admin.ModelAdmin):
+    list_display = ['agenda', 'purpose', 'requester_name', 'start_time', 'end_time', 'status']
+    list_filter = ['status', 'purpose']
+    search_fields = ['agenda', 'requester_name__username']
+
+    def save_model(self, request, obj, form, change):
+        try:
+            obj.clean()
+            super().save_model(request, obj, form, change)
+        except ValidationError as e:
+            form.add_error(None, e)    
 
 
 @admin.register(Booking)

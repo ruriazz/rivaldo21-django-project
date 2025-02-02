@@ -8,9 +8,13 @@ from rest_framework import viewsets, status
 from .serializers import CustomLoginSerializer
 from rest_framework.decorators import action
 from rest_framework.viewsets import ModelViewSet
+from .models import ExecutiveMeeting
+from rest_framework import serializers
+from .serializers import ExecutiveMeetingSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from .models import Purpose, Room, Vehicle, Booking, Departement, CustomUser
+from .serializers import ExecutiveMeetingSerializer, PurposeSerializer, RoomSerializer, VehicleSerializer, BookingSerializer, DepartementSerializer
 from bookingsystem.enums import UserRoles
 from bookingsystem.utils.notification import (
     FCMNotification,
@@ -46,6 +50,22 @@ class LoginAPIView(APIView):
 class PurposeViewSet(ModelViewSet):
     queryset = Purpose.objects.all()
     serializer_class = PurposeSerializer
+
+
+class ExecutiveMeetingViewSet(viewsets.ModelViewSet):
+    queryset = ExecutiveMeeting.objects.select_related('purpose', 'departement').all()
+    serializer_class = ExecutiveMeetingSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [AllowAny]
+
+    def perform_create(self, serializer):
+        if self.request.user.is_authenticated:
+            serializer.save(requester_name=self.request.user)
+        else:
+            raise serializers.ValidationError({
+                "requester_name": "Authentication credentials were not provided."
+            })
+
 
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.select_related('room', 'vehicle', 'departement').all()
