@@ -66,7 +66,9 @@ class FCMNotification:
         if not FCMNotification._is_initialized:
             try:
                 cred = credentials.Certificate(
-                        os.path.join(BASE_DIR, "bookingsystem", "config", "firebase", "service-account.json"
+                    Path.joinpath(
+                        BASE_DIR,
+                        "bookingsystem/config/firebase/service-account.json",
                     )
                 )
                 firebase_admin.initialize_app(cred)
