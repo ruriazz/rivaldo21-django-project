@@ -3,6 +3,8 @@ import asyncio
 import os
 import firebase_admin
 import logging
+import os
+from pathlib import Path
 from datetime import datetime
 from asgiref.sync import sync_to_async
 from firebase_admin import credentials, messaging
@@ -11,8 +13,8 @@ from dataclasses import dataclass, asdict, field
 
 import firebase_admin._messaging_utils
 from bookingsystem.models import CustomUser, FCMToken, UserNotification
-from booking_system.settings import Path, BASE_DIR
 
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 @dataclass
 class FirebaseNotificationPayload:
@@ -63,24 +65,29 @@ class FCMNotification:
 
     @staticmethod
     def initialize():
+        """Inisialisasi Firebase Admin dengan Path yang benar"""
         if not FCMNotification._is_initialized:
             try:
-                cred = credentials.Certificate(
-                    Path.joinpath(
-                        BASE_DIR,
-                        "bookingsystem/config/firebase/service-account.json",
-                    )
-                )
+                service_account_path = BASE_DIR / "bookingsystem/config/firebase/service-account.json"
+
+                if not service_account_path.exists():
+                    raise FileNotFoundError(f"Firebase credential file not found: {service_account_path}")
+
+                cred = credentials.Certificate(str(service_account_path))  # Pastikan dalam format string
                 firebase_admin.initialize_app(cred)
                 FCMNotification._is_initialized = True
-            except ValueError:
-                FCMNotification._is_initialized = True
+                logging.info("Firebase Admin SDK initialized successfully.")
+            except Exception as e:
+                logging.error(f"Firebase Initialization Error: {e}")
+                FCMNotification._is_initialized = False
 
     def is_initialized(self):
+        """Pastikan Firebase sudah diinisialisasi sebelum mengirim notifikasi"""
         if not self._is_initialized:
             raise ValueError("FCMNotification is not initialized.")
 
     def send(self, users: list[CustomUser]):
+        """Mengirimkan notifikasi ke semua user yang memiliki FCM Token"""
         for user in users:
             self.multi_push(
                 list(user.fcm_tokens.all().values_list("token", flat=True).distinct())
@@ -88,6 +95,7 @@ class FCMNotification:
             UserNotification.objects.create(user=user, payload=self.payload.to_dict(), fcm_sent_at=datetime.now())
 
     def single_push(self, token: str):
+        """Mengirimkan notifikasi ke satu user"""
         self.is_initialized()
         try:
             message = messaging.Message(
@@ -107,10 +115,11 @@ class FCMNotification:
             FCMToken.objects.filter(token=token).delete()
             return "Unregistered"
         except Exception as e:
-            logging.error(f"Error sending notification: {e}", e)
+            logging.error(f"Error sending notification: {e}")
             return None
 
     async def async_single_push(self, token: str):
+        """Mengirimkan notifikasi ke satu user secara async"""
         try:
             return messaging.send(
                 messaging.Message(
@@ -131,10 +140,11 @@ class FCMNotification:
             await delete_token()
             return "Unregistered"
         except Exception as e:
-            logging.error(f"Error sending notification: {e}", e)
+            logging.error(f"Error sending notification: {e}")
             return None
 
     def multi_push(self, tokens: list[str]):
+        """Mengirimkan notifikasi ke banyak user sekaligus"""
         self.is_initialized()
 
         async def run_async():
