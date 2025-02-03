@@ -13,9 +13,9 @@ import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-FIREBASE_CREDENTIALS = "/opt/render/project/src/bookingsystem/config/firebase/service-account.json"
+FIREBASE_CREDENTIALS = os.path.join(BASE_DIR, "bookingsystem", "config", "firebase", "service-account.json")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
