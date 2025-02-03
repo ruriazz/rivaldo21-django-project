@@ -1,5 +1,6 @@
 import json
 import asyncio
+import os
 import firebase_admin
 import logging
 from datetime import datetime
@@ -65,9 +66,7 @@ class FCMNotification:
         if not FCMNotification._is_initialized:
             try:
                 cred = credentials.Certificate(
-                    Path.joinpath(
-                        BASE_DIR,
-                        "D:/django-project/bookingsystem/config/firebase/service-account.json",
+                        os.path.join(BASE_DIR, "bookingsystem", "config", "firebase", "service-account.json"
                     )
                 )
                 firebase_admin.initialize_app(cred)
