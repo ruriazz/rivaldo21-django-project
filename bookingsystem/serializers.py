@@ -5,9 +5,12 @@ from .models import Booking
 from django.db.models import Q
 from datetime import datetime
 from .models import CustomUser
+from .models import ExecutiveMeeting, Departement 
 from django.contrib.auth import authenticate
 from rest_framework.exceptions import AuthenticationFailed
 from .models import ExecutiveMeeting, Purpose, Booking, Room, Vehicle, Departement
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class CustomLoginSerializer(serializers.Serializer):
     username_or_email = serializers.CharField()
@@ -104,20 +107,25 @@ class PurposeSerializer(serializers.ModelSerializer):
 
 
 class ExecutiveMeetingSerializer(serializers.ModelSerializer):
-    purpose_details = PurposeSerializer(source='purpose', read_only=True)
-    departement_details = DepartementSerializer(source='departement', read_only=True)
-    formatted_start_time = serializers.SerializerMethodField()
-    formatted_end_time = serializers.SerializerMethodField()
+    participants = serializers.SerializerMethodField() 
+    room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all(), required=False, allow_null=True)
+    vehicle = serializers.PrimaryKeyRelatedField(queryset=Vehicle.objects.all(), required=False, allow_null=True)
+    substitute_executive = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        required=False,
+        allow_null=True
+    )
 
     class Meta:
         model = ExecutiveMeeting
         fields = [
-            'id', 'agenda', 'purpose', 'purpose_details',
-            'requester_name', 'location', 'participants',
-            'departement', 'departement_details',
-            'start_time', 'end_time', 'formatted_start_time', 'formatted_end_time', 'status'
+            'id', 'description', 'requester_name', 'location', 'participants', 
+            'room', 'vehicle', 'substitute_executive', 
+            'start_time', 'end_time', 'status', 'obs'
         ]
-        read_only_fields = ['status', 'requester_name']
+
+    def get_participants(self, obj):
+        return [dept.name for dept in obj.participants.all()]
 
     def get_formatted_start_time(self, obj):
         return obj.start_time.strftime('%d-%m-%Y %H:%M') if obj.start_time else None
@@ -148,7 +156,7 @@ class BookingSerializer(serializers.ModelSerializer):
         read_only_fields = ['status', 'requester_name']
 
     def validate(self, data):
-        # Validasi waktu
+        # Validasaun oras
         start_time = data.get('start_time')
         end_time = data.get('end_time')
 
@@ -157,11 +165,9 @@ class BookingSerializer(serializers.ModelSerializer):
         if start_time >= end_time:
             raise serializers.ValidationError("start_time must be earlier than end_time.")
 
-            # Validasi purpose
         if 'purpose' not in data or not data.get('purpose'):
             raise serializers.ValidationError("Purpose is required.")
 
-        # Validasi resource type
         resource_type = data.get('resource_type')
         if resource_type == 'Room':
             if not data.get('room'):
@@ -176,7 +182,7 @@ class BookingSerializer(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError("Invalid resource_type. Must be 'Room' or 'Vehicle'.")
 
-        # Validasi konflik booking
+        # Validasaun konflitu booking
         overlapping_bookings = Booking.objects.filter(
             resource_type=resource_type,
             start_time__lt=end_time,

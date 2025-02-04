@@ -64,16 +64,17 @@ class DriverAdmin(admin.ModelAdmin):
 
 @admin.register(ExecutiveMeeting)
 class ExecutiveMeetingAdmin(admin.ModelAdmin):
-    list_display = ['agenda', 'purpose', 'requester_name', 'start_time', 'end_time', 'status']
-    list_filter = ['status', 'purpose']
-    search_fields = ['agenda', 'requester_name__username']
+    list_display = ['description', 'requester_name', 'room', 'vehicle', 'start_time', 'end_time', 'status', 'obs']
+    list_filter = ['status']
+    search_fields = ['description', 'requester_name__username']
 
-    def save_model(self, request, obj, form, change):
-        try:
-            obj.clean()
-            super().save_model(request, obj, form, change)
-        except ValidationError as e:
-            form.add_error(None, e)    
+    fieldsets = (
+        (None, {
+            'fields': ('description', 'requester_name', 'location', 'room', 'vehicle', 'start_time', 'end_time', 'status', 'obs', 'participants', 'substitute_executive')
+        }),
+    )
+
+    filter_horizontal = ('participants',)  
 
 
 @admin.register(Booking)

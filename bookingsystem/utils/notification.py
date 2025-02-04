@@ -73,7 +73,7 @@ class FCMNotification:
                 if not service_account_path.exists():
                     raise FileNotFoundError(f"Firebase credential file not found: {service_account_path}")
 
-                cred = credentials.Certificate(str(service_account_path))  # Pastikan dalam format string
+                cred = credentials.Certificate(str(service_account_path))
                 firebase_admin.initialize_app(cred)
                 FCMNotification._is_initialized = True
                 logging.info("Firebase Admin SDK initialized successfully.")

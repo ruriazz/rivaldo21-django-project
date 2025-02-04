@@ -118,7 +118,7 @@ class Booking(models.Model):
     RESOURCE_TYPE_CHOICES = [
         ('Room', 'Room'),
         ('Vehicle', 'Vehicle'),
-         ('Executive Meeting', 'Executive Meeting'),
+        
     ]
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
@@ -171,21 +171,41 @@ class UserNotification(models.Model):
         return f"Notification for {self.user.username}"
     
 class ExecutiveMeeting(models.Model):
-    STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Approved', 'Approved'),
-        ('Rejected', 'Rejected'),
-    ]
-
-    agenda = models.CharField(max_length=255)
-    purpose = models.ForeignKey('Purpose', on_delete=models.SET_NULL, null=True, related_name='executive_meetings')
-    requester_name = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='executive_meetings')
+    description = models.CharField(max_length=255)
+    requester_name = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='requested_meetings',
+        verbose_name='Requester'
+    )
     location = models.CharField(max_length=255)
-    participants = models.TextField(help_text="List of participants (separated by commas)")
-    departement = models.ForeignKey('Departement', on_delete=models.SET_NULL, null=True, related_name='executive_meetings')
+    participants = models.ManyToManyField(
+        Departement,
+        related_name="meeting_participants",
+        blank=True
+    )
+    substitute_executive = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="substituted_meetings"
+    )
+    room = models.ForeignKey(
+        'Room',  # Relasi ke Room
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="executive_meetings"
+    )
+    vehicle = models.ForeignKey(
+        'Vehicle',  # Relasi ke Vehicle
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="executive_meetings"
+    )
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
+    status = models.CharField(max_length=50, choices=[("Pending", "Pending"), ("Completed", "Completed")])
+    obs = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return f"Executive Meeting: {self.agenda} by {self.requester_name}"
+        return self.description

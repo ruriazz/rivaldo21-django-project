@@ -53,18 +53,30 @@ class PurposeViewSet(ModelViewSet):
 
 
 class ExecutiveMeetingViewSet(viewsets.ModelViewSet):
-    queryset = ExecutiveMeeting.objects.select_related('purpose', 'departement').all()
+    queryset = ExecutiveMeeting.objects.all()
     serializer_class = ExecutiveMeetingSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
-        if self.request.user.is_authenticated:
-            serializer.save(requester_name=self.request.user)
-        else:
-            raise serializers.ValidationError({
-                "requester_name": "Authentication credentials were not provided."
-            })
+        """Saat meeting dibuat, admin bisa menambahkan undangan untuk direktur/departemen dan memilih pengganti"""
+        meeting = serializer.save(requester_name=self.request.user)
+        invited_users = serializer.validated_data.get('invited_users', [])
+        substitute_executive = serializer.validated_data.get('substitute_executive', None)
+
+        # Kirim notifikasi ke admin departament yang ditag
+        for user in invited_users:
+            user.email_user(
+                subject="Undangan Rapat Eksekutif",
+                message=f"Anda diundang ke rapat: {meeting.agenda}\nWaktu: {meeting.start_time} - {meeting.end_time}",
+            )
+
+        # Kirim notifikasi ke pengganti Direktur Executive jika ada
+        if substitute_executive:
+            substitute_executive.email_user(
+                subject="Anda Ditunjuk sebagai Pengganti Rapat",
+                message=f"Anda ditunjuk sebagai pengganti Direktur Executive dalam rapat: {meeting.agenda}\nWaktu: {meeting.start_time} - {meeting.end_time}",
+            )
 
 
 class BookingViewSet(viewsets.ModelViewSet):
