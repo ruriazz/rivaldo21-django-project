@@ -170,7 +170,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'departement', 'departement_details',
             'requester_name', 'start_time', 'end_time',
             'formatted_start_time', 'formatted_end_time',
-            'destination_address', 'travel_description', 'status',
+            'destination_address', 'description', 'status',
         ]
         read_only_fields = ['status', 'requester_name']
 

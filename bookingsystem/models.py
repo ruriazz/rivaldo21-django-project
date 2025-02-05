@@ -165,8 +165,8 @@ class Booking(models.Model):
     departement = models.ForeignKey(Departement, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')  
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    destination_address = models.CharField(max_length=255, null=True, blank=True)  
-    travel_description = models.TextField(null=False, blank=False)  
+    description = models.TextField(null=False, blank=False)
+    destination_address = models.CharField(max_length=255, null=True, blank=True)   
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
 
     def clean(self):
@@ -180,8 +180,8 @@ class Booking(models.Model):
             raise ValidationError({"room": "This field is required."})
         if self.resource_type == "Vehicle" and not self.vehicle:
             raise ValidationError({"vehicle": "This field is required."})
-        if not self.travel_description:
-            raise ValidationError({"travel_description": "Travel description is required."})
+        if not self.description:
+            raise ValidationError({"description": "This field is required."})
 
 class FCMToken(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=False, related_name='fcm_tokens')
