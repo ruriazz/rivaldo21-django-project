@@ -161,6 +161,7 @@ class Booking(models.Model):
         related_name='bookings',
         verbose_name='Requester'
     )
+    departement = models.ForeignKey(Departement, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')  # ✅ Tambahkan ini
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     description = models.TextField(null=False, blank=False)
