@@ -2,8 +2,11 @@ from enum import Enum
 
 class UserRoles(Enum):
     ADMIN = 'admin'
-    DRIVER = 'driver'
+    DEPARTMENT_CHIEF = 'department_chief'
+    DIRECTOR = "director"
     EXECUTIVE = 'executive'
+    STAFF = 'staff'
+    DRIVER = 'driver'  
 
     @staticmethod
     def choices():

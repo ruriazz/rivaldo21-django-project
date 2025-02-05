@@ -92,7 +92,7 @@ class VehicleSerializer(serializers.ModelSerializer):
         return False
 
     def get_driver_name(self, obj):
-        return obj.driver.name if obj.driver else "No Driver Assigned"
+        return obj.driver.user.get_full_name() if obj.driver and obj.driver.user else "No Driver Assigned"
 
 
 class DepartementSerializer(serializers.ModelSerializer):
@@ -107,7 +107,7 @@ class PurposeSerializer(serializers.ModelSerializer):
 
 
 class ExecutiveMeetingSerializer(serializers.ModelSerializer):
-    participants = serializers.SerializerMethodField() 
+    participants = serializers.SerializerMethodField()
     room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all(), required=False, allow_null=True)
     vehicle = serializers.PrimaryKeyRelatedField(queryset=Vehicle.objects.all(), required=False, allow_null=True)
     substitute_executive = serializers.PrimaryKeyRelatedField(
@@ -115,17 +115,36 @@ class ExecutiveMeetingSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+    obs = serializers.CharField(required=True)
 
     class Meta:
         model = ExecutiveMeeting
         fields = [
-            'id', 'description', 'requester_name', 'location', 'participants', 
-            'room', 'vehicle', 'substitute_executive', 
+            'id', 'description', 'requester_name', 'location', 'participants',
+            'room', 'vehicle', 'substitute_executive',
             'start_time', 'end_time', 'status', 'obs'
         ]
 
     def get_participants(self, obj):
-        return [dept.name for dept in obj.participants.all()]
+        """
+        Mengembalikan daftar nama departemen yang menjadi participants.
+        """
+        participants = obj.participants.all()
+        if not participants.exists():
+            return ["No Participants"]
+        return [dept.name for dept in participants]
+
+    def validate(self, data):
+        """
+        Validasi agar Participants dan Obs wajib diisi.
+        """
+        if not self.instance and not data.get('participants'):
+            raise serializers.ValidationError({"participants": "Participants harus dipilih minimal 1!"})
+
+        if not data.get('obs'):
+            raise serializers.ValidationError({"obs": "Observation/Notes tidak boleh kosong!"})
+
+        return data
 
     def get_formatted_start_time(self, obj):
         return obj.start_time.strftime('%d-%m-%Y %H:%M') if obj.start_time else None

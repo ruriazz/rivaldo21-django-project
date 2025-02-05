@@ -4,6 +4,8 @@ from django.core.validators import MinLengthValidator
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from bookingsystem.enums import UserRoles
+from django.conf import settings
+User = settings.AUTH_USER_MODEL
 
 class CustomUser(AbstractUser):
     username = models.CharField(
@@ -17,12 +19,22 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
+
+    ROLE_CHOICES = [
+        (UserRoles.ADMIN.value, "Admin"),
+        (UserRoles.DEPARTMENT_CHIEF.value, "Department Chief"),
+        (UserRoles.DIRECTOR.value, "Director"),  
+        (UserRoles.EXECUTIVE.value, "Executive"),
+        (UserRoles.STAFF.value, "Staff"),  
+        (UserRoles.DRIVER.value, "Driver"),
+    ]
+
     role = models.CharField(
         max_length=50,
-        choices=UserRoles.choices(),
-        default=UserRoles.ADMIN.value,
+        choices=ROLE_CHOICES,
+        default=UserRoles.ADMIN.value,  
         blank=False,
-        null=True
+        null=False
     )
 
     groups = models.ManyToManyField(
@@ -38,8 +50,12 @@ class CustomUser(AbstractUser):
 
     REQUIRED_FIELDS = ['email', 'first_name', 'last_name', 'role']
 
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
+
     def __str__(self):
-        return self.username
+        return f"{self.username} - {self.get_role_display()}"
+
 
 class Departement(models.Model):
     name = models.CharField(max_length=100)
@@ -49,11 +65,17 @@ class Departement(models.Model):
 
 
 class Driver(models.Model):
-    name = models.CharField(max_length=100)
-    license_number = models.CharField(max_length=50, unique=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={'role': 'driver'},
+        verbose_name="Driver"
+    )
+    license_number = models.CharField(max_length=20, unique=True)
 
     def __str__(self):
-        return self.name
+        full_name = self.user.get_full_name().strip() if self.user else "No Name"
+        return f"{full_name} - {self.license_number}"
 
 
 class Room(models.Model):
@@ -99,7 +121,11 @@ class Vehicle(models.Model):
     )
 
     def __str__(self):
-        return f"{self.name} ({self.driver.name if self.driver else 'No Driver'})"
+        if self.driver and self.driver.user:
+            driver_name = self.driver.user.get_full_name()
+            return f"{self.name} ({driver_name} - {self.driver.license_number})"
+        return f"{self.name} (No Driver)"
+
 
     def is_in_use(self, start_time, end_time):
         return self.bookings.filter(
@@ -118,7 +144,6 @@ class Booking(models.Model):
     RESOURCE_TYPE_CHOICES = [
         ('Room', 'Room'),
         ('Vehicle', 'Vehicle'),
-        
     ]
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
@@ -130,16 +155,6 @@ class Booking(models.Model):
     purpose = models.ForeignKey(Purpose, on_delete=models.SET_NULL, null=True, blank=False, related_name='bookings')
     room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')
     vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')
-    departement = models.ForeignKey(
-        Departement,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='bookings'
-    )
-
-    destination_address = models.CharField(max_length=255, null=True, blank=True)
-    travel_description = models.TextField(null=False, blank=False)
     requester_name = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -148,10 +163,18 @@ class Booking(models.Model):
     )
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
+    description = models.TextField(null=False, blank=False)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
 
-    def __str__(self):
-        return f"{self.resource_type} Booking for {self.purpose} by {self.requester_name}"
+    def clean(self):
+        super().clean()
+
+        if self.resource_type == "Room" and not self.room:
+            raise ValidationError({"room": "This field is required."})
+        if self.resource_type == "Vehicle" and not self.vehicle:
+            raise ValidationError({"vehicle": "This field is required."})
+        if not self.description.strip():
+            raise ValidationError({"description": "This field is required."})
 
 class FCMToken(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=False, related_name='fcm_tokens')
@@ -179,10 +202,17 @@ class ExecutiveMeeting(models.Model):
         verbose_name='Requester'
     )
     location = models.CharField(max_length=255)
+    purpose = models.ForeignKey(
+        Purpose,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,  # Wajib diisi
+        related_name="executive_meetings"
+    )
     participants = models.ManyToManyField(
         Departement,
         related_name="meeting_participants",
-        blank=True
+        blank=False  # Participants wajib diisi
     )
     substitute_executive = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -191,13 +221,13 @@ class ExecutiveMeeting(models.Model):
         related_name="substituted_meetings"
     )
     room = models.ForeignKey(
-        'Room',  # Relasi ke Room
+        'Room',
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name="executive_meetings"
     )
     vehicle = models.ForeignKey(
-        'Vehicle',  # Relasi ke Vehicle
+        'Vehicle',
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name="executive_meetings"
@@ -205,7 +235,19 @@ class ExecutiveMeeting(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     status = models.CharField(max_length=50, choices=[("Pending", "Pending"), ("Completed", "Completed")])
-    obs = models.TextField(null=True, blank=True)
+    obs = models.TextField(null=False, blank=False)
 
     def __str__(self):
         return self.description
+
+    def clean(self):
+        super().clean()
+
+        if not self.pk: 
+            return
+
+        if not self.purpose:
+            raise ValidationError({"purpose": "Purpose harus dipilih!"})    
+
+        if not self.participants.exists():
+            raise ValidationError({"participants": "Minimal satu peserta harus dipilih."})    
