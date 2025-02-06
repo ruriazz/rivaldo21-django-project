@@ -211,11 +211,13 @@ def dashboard(request):
     rooms = Room.objects.all()
     vehicles = Vehicle.objects.all()
     bookings = Booking.objects.select_related('room', 'vehicle', 'departement').all()
+    executive_meetings = ExecutiveMeeting.objects.all()
     departements = Departement.objects.all()
     context = {
         'rooms': rooms,
         'vehicles': vehicles,
         'bookings': bookings,
+        'executive_meetings': executive_meetings,
         'departements': departements,
     }
     return render(request, 'dashboard.html', context)

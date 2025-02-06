@@ -162,7 +162,7 @@ class Booking(models.Model):
         related_name='bookings',
         verbose_name='Requester'
     )
-    departement = models.ForeignKey(Departement, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')  
+    departement = models.ForeignKey(Departement,on_delete=models.CASCADE,  null=False,  blank=False, related_name='bookings')  
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     description = models.TextField(null=False, blank=False)
@@ -172,7 +172,7 @@ class Booking(models.Model):
     def clean(self):
         super().clean()
         if self.resource_type == "Vehicle" and not self.destination_address:
-            raise ValidationError({"destination_address": "This field is required."})
+            raise ValidationError({"destination_address": "This field is required."})        
 
     def clean(self):
         super().clean()

@@ -82,7 +82,7 @@ class DriverAdmin(admin.ModelAdmin):
 
 
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ['resource_type', 'purpose', 'requester_name', 'start_time', 'end_time', 'status']
+    list_display = ['resource_type', 'purpose', 'departement', 'requester_name', 'start_time', 'end_time', 'status']
     list_filter = ['status', 'resource_type', 'purpose']
     search_fields = ['requester_name__username', 'purpose__name']
 
@@ -91,12 +91,19 @@ class BookingAdmin(admin.ModelAdmin):
             kwargs["queryset"] = CustomUser.objects.exclude(role="driver")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
 
-        if 'description' not in fields:
-            fields.append('description')
+        def get_fields(self, request, obj=None):
+            fields = super().get_fields(request, obj)
+
+            if 'description' not in fields:
+                fields.append('description')
+
+            return fields
+
+            if 'description' not in fields:
+              fields.append('description')
 
         return fields
 
@@ -136,18 +143,21 @@ class ExecutiveMeetingAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('description', 'purpose', 'requester_name', 'location', 'room', 'vehicle', 
-                       'start_time', 'end_time', 'status', 'obs', 'participants', 
-                       'substitute_executive')
+        'fields': ('description', 'purpose', 'requester_name', 'location', 
+                   'room', 'vehicle', 'start_time', 'end_time', 'status', 'obs', 
+                   'participants', 'substitute_executive')
         }),
     )
 
     filter_horizontal = ('participants',)
 
     def save_model(self, request, obj, form, change):
-        """
-        Validasi agar Purpose, Participants, dan Obs wajib diisi sebelum menyimpan.
-        """
+        if not change:  
+            obj.save()  
+            form.save_m2m()  
+        else:
+            super().save_model(request, obj, form, change)
+
         if not obj.purpose:
             form.add_error('purpose', 'Purpose harus dipilih!')
         if not obj.participants.exists():

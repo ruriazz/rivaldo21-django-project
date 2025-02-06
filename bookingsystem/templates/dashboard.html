@@ -184,39 +184,93 @@
                 </tbody>
             </table>
 
-            <h2>Vehicles</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Capacity</th>
-                        <th>Status</th>
-                        <th>Driver</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for vehicle in vehicles %}
+            <h2>Vehicles Availability</h2>
+                <table>
+                    <thead>
                         <tr>
-                            <td>{{ vehicle.name }}</td>
-                            <td>{{ vehicle.type }}</td>
-                            <td>{{ vehicle.capacity }}</td>
-                            <td>{{ vehicle.status }}</td>
-                            <td>
-                                {% if vehicle.driver %}
-                                    {{ vehicle.driver.name }}
-                                {% else %}
-                                    No Driver
-                                {% endif %}
-                            </td>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Capacity</th>
+                            <th>Status</th>
+                            <th>Driver</th>
                         </tr>
-                    {% empty %}
+                    </thead>
+                    <tbody>
+                        {% for vehicle in vehicles %}
+                            <tr>
+                                <td>{{ vehicle.name }}</td>
+                                <td>{{ vehicle.type }}</td>
+                                <td>{{ vehicle.capacity }}</td>
+                                <td>{{ vehicle.status }}</td>
+                                <td>
+                                    {% if vehicle.driver and vehicle.driver.user %}
+                                        {{ vehicle.driver.user.get_full_name }}
+                                    {% else %}
+                                        No Driver
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="no-data">No vehicles available.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            <h2>Executive Meetings</h2>
+                <table>
+                    <thead>
                         <tr>
-                            <td colspan="5" class="no-data">No vehicles available.</td>
+                            <th>Description</th>
+                            <th>Requester</th>
+                            <th>Location</th>
+                            <th>Purpose</th>
+                            <th>Participants</th>
+                            <th>Substitute Executive</th>
+                            <th>Room</th>
+                            <th>Vehicle</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Status</th>
+                            <th>Observations</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {% for meeting in executive_meetings %}
+                            <tr>
+                                <td>{{ meeting.description }}</td>
+                                <td>{{ meeting.requester_name }}</td>
+                                <td>{{ meeting.location }}</td>
+                                <td>{{ meeting.purpose.name }}</td>
+                                <td>
+                                    {% for participant in meeting.participants.all %}
+                                        {{ participant.name }}{% if not forloop.last %}, {% endif %}
+                                    {% empty %}
+                                        No Participants
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% if meeting.substitute_executive %}
+                                        {{ meeting.substitute_executive }}
+                                    {% else %}
+                                        None
+                                    {% endif %}
+                                </td>
+                                <td>{{ meeting.room.name|default:"-" }}</td>
+                                <td>{{ meeting.vehicle.name|default:"-" }}</td>
+                                <td>{{ meeting.start_time|date:"Y-m-d H:i" }}</td>
+                                <td>{{ meeting.end_time|date:"Y-m-d H:i" }}</td>
+                                <td>{{ meeting.status }}</td>
+                                <td>{{ meeting.obs|default:"-" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="12" class="no-data">No executive meetings available.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
 
             <h2>Room Bookings</h2>
             <table>
@@ -246,7 +300,7 @@
                                     {% endif %}
                                 </td>
                                 <td>{{ booking.purpose.name }}</td>
-                                <td>{{ booking.travel_description|default:"-" }}</td>
+                                <td>{{ booking.description|default:"-" }}</td>
                                 <td>{{ booking.start_time|date:"Y-m-d H:i" }}</td>
                                 <td>{{ booking.end_time|date:"Y-m-d H:i" }}</td>
                                 <td>{{ booking.status }}</td>
@@ -304,7 +358,7 @@
                             {% endif %}
                         </td>
                         <td>{{ booking.destination_address|default:"-" }}</td>
-                        <td>{{ booking.travel_description|default:"-" }}</td>
+                        <td>{{ booking.description|default:"-" }}</td>
                         <td>{{ booking.start_time|date:"Y-m-d H:i" }}</td>
                         <td>{{ booking.end_time|date:"Y-m-d H:i" }}</td>
                         <td>{{ booking.status }}</td>
@@ -321,7 +375,7 @@
         </div>
     </div>
 
-    <script>
+    <!-- <script>
         {% comment %} console.log('Script loaded');
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM loaded');
@@ -330,6 +384,7 @@
                 window.location.href = "{% url 'admin:index' %}";
             }, 2000);
         }); {% endcomment %}
-    </script>
-</body>
+    </script> -->
+
+  </body>
 </html>
