@@ -314,63 +314,63 @@
                 </tbody>
             </table>
 
-            <h2>Vehicle Bookings</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Vehicle</th>
-                <th>Requester</th>
-                <th>Departement</th>
-                <th>Purpose</th>
-                <th>Driver</th>
-                <th>Destination</th>
-                <th>Description</th>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for booking in bookings %}
-                {% if booking.resource_type == "Vehicle" %}
+        <h2>Vehicle Bookings</h2>
+            <table>
+                <thead>
                     <tr>
-                        <td>{{ booking.vehicle.name }}</td>
-                        <td>{{ booking.requester_name }}</td>
-                        <td>
-                            {% if booking.departement %}
-                                {{ booking.departement.name }}
-                            {% else %}
-                                No Departement
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if booking.purpose %}
-                                {{ booking.purpose.name }}
-                            {% else %}
-                                No Purpose
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if booking.vehicle.driver %}
-                                {{ booking.vehicle.driver.name }}
-                            {% else %}
-                                No Driver
-                            {% endif %}
-                        </td>
-                        <td>{{ booking.destination_address|default:"-" }}</td>
-                        <td>{{ booking.description|default:"-" }}</td>
-                        <td>{{ booking.start_time|date:"Y-m-d H:i" }}</td>
-                        <td>{{ booking.end_time|date:"Y-m-d H:i" }}</td>
-                        <td>{{ booking.status }}</td>
+                        <th>Vehicle</th>
+                        <th>Requester</th>
+                        <th>Departement</th>
+                        <th>Purpose</th>
+                        <th>Driver</th>
+                        <th>Destination</th>
+                        <th>Description</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Status</th>
                     </tr>
-                {% endif %}
-            {% empty %}
-                <tr>
-                    <td colspan="9" class="no-data">No vehicle bookings available.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                        {% if booking.resource_type == "Vehicle" %}
+                            <tr>
+                                <td>{{ booking.vehicle.name }}</td>
+                                <td>{{ booking.requester_name }}</td>
+                                <td>
+                                    {% if booking.departement %}
+                                        {{ booking.departement.name }}
+                                    {% else %}
+                                        No Departement
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if booking.purpose %}
+                                        {{ booking.purpose.name }}
+                                    {% else %}
+                                        No Purpose
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if booking.vehicle.driver and booking.vehicle.driver.user %}
+                                        {{ booking.vehicle.driver.user.get_full_name }}
+                                    {% else %}
+                                        No Driver
+                                    {% endif %}
+                                </td>
+                                <td>{{ booking.destination_address|default:"-" }}</td>
+                                <td>{{ booking.description|default:"-" }}</td>
+                                <td>{{ booking.start_time|date:"Y-m-d H:i" }}</td>
+                                <td>{{ booking.end_time|date:"Y-m-d H:i" }}</td>
+                                <td>{{ booking.status }}</td>
+                            </tr>
+                        {% endif %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="9" class="no-data">No vehicle bookings available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
         </div>
     </div>
