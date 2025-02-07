@@ -8,8 +8,9 @@ from .models import CustomUser
 from .models import ExecutiveMeeting, Departement 
 from django.contrib.auth import authenticate
 from rest_framework.exceptions import AuthenticationFailed
-from .models import ExecutiveMeeting, Purpose, Booking, Room, Vehicle, Departement
+from .models import ExecutiveMeeting, Purpose, Booking, CustomUser, Room, Vehicle, Departement
 from django.contrib.auth import get_user_model
+from .models import UserRoles
 User = get_user_model()
 
 class CustomLoginSerializer(serializers.Serializer):
@@ -107,32 +108,32 @@ class PurposeSerializer(serializers.ModelSerializer):
 
 
 class ExecutiveMeetingSerializer(serializers.ModelSerializer):
-    participants = serializers.SerializerMethodField()
+    requester_name = UserSerializer(read_only=True)  # Mengubah ID jadi Nama
+    substitute_executive = UserSerializer(read_only=True)  # Menampilkan Nama Pengganti
+    participants = DepartementSerializer(many=True, read_only=True)
+    
+    # Gunakan PrimaryKeyRelatedField untuk Room & Vehicle
     room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all(), required=False, allow_null=True)
     vehicle = serializers.PrimaryKeyRelatedField(queryset=Vehicle.objects.all(), required=False, allow_null=True)
-    substitute_executive = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        required=False,
-        allow_null=True
-    )
-    obs = serializers.CharField(required=True)
+
+    # Field baru untuk format tanggal
+    formatted_start_time = serializers.SerializerMethodField()
+    formatted_end_time = serializers.SerializerMethodField()
 
     class Meta:
         model = ExecutiveMeeting
         fields = [
             'id', 'description', 'requester_name', 'location', 'participants',
             'room', 'vehicle', 'substitute_executive',
-            'start_time', 'end_time', 'status', 'obs'
+            'start_time', 'end_time', 'formatted_start_time', 'formatted_end_time',
+            'status', 'obs'
         ]
 
-    def get_participants(self, obj):
-        """
-        Mengembalikan daftar nama departemen yang menjadi participants.
-        """
-        participants = obj.participants.all()
-        if not participants.exists():
-            return ["No Participants"]
-        return [dept.name for dept in participants]
+    def get_formatted_start_time(self, obj):
+        return obj.start_time.strftime('%d-%m-%Y %H:%M') if obj.start_time else None
+
+    def get_formatted_end_time(self, obj):
+        return obj.end_time.strftime('%d-%m-%Y %H:%M') if obj.end_time else None
 
     def validate(self, data):
         """
@@ -145,12 +146,6 @@ class ExecutiveMeetingSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"obs": "Observation/Notes tidak boleh kosong!"})
 
         return data
-
-    def get_formatted_start_time(self, obj):
-        return obj.start_time.strftime('%d-%m-%Y %H:%M') if obj.start_time else None
-
-    def get_formatted_end_time(self, obj):
-        return obj.end_time.strftime('%d-%m-%Y %H:%M') if obj.end_time else None
 
 
 class BookingSerializer(serializers.ModelSerializer):

@@ -53,7 +53,7 @@ class PurposeViewSet(ModelViewSet):
 
 
 class ExecutiveMeetingViewSet(viewsets.ModelViewSet):
-    queryset = ExecutiveMeeting.objects.all()
+    queryset = ExecutiveMeeting.objects.all().order_by('-start_time')
     serializer_class = ExecutiveMeetingSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [AllowAny]
