@@ -1,6 +1,10 @@
 from django.contrib import admin
 from django.shortcuts import render
 from django.contrib.auth.admin import UserAdmin
+from django.db import transaction
+
+from bookingsystem.enums import UserRoles
+from bookingsystem.utils.notification import FCMNotification, FirebaseNotificationPayload
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 from .models import CustomUser
 from .models import Purpose
@@ -109,8 +113,21 @@ class BookingAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         try:
-            obj.clean()
-            super().save_model(request, obj, form, change)
+            with transaction.atomic():
+                obj.clean()
+                super().save_model(request, obj, form, change)
+                booking_id = obj.id
+
+                drivers = CustomUser.objects.filter(role=UserRoles.DRIVER.value)
+                payload = FirebaseNotificationPayload(
+                    title="Hooray! A New Booking Just Came In!",
+                    body="A new booking has just been secured! Don't miss the chance to prepare and make this event unforgettable. Click here for more information!",
+                    data={
+                        "click_action": f"/admin/bookingsystem/booking/{booking_id}/change/",
+                        "ref": f"booking:{booking_id}",
+                    },
+                )
+                FCMNotification(payload).send(users=list(drivers))
         except ValidationError as e:
             form.add_error(None, e)
 

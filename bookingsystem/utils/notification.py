@@ -145,8 +145,5 @@ class FCMNotification:
         """Mengirimkan notifikasi ke banyak user sekaligus"""
         self.is_initialized()
 
-        async def run_async():
-            tasks = [self.async_single_push(token) for token in tokens]
-            await asyncio.gather(*tasks)
-
-        asyncio.run(run_async())
+        for token in tokens:
+            self.single_push(token)
